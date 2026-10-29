@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Check, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KlokkLogo } from "@/components/klokk/logo";
+import { AvatarUpload, Avatar } from "@/components/klokk/avatar";
 import { useEventByToken, useSubmitResponse } from "@/lib/klokk-hooks";
 import { computeStatus } from "@/lib/klokk-store";
 import { formatDateTime, relativeDeadline, toSlotLabel } from "@/lib/klokk-format";
+import { uploadParticipantAvatar } from "@/lib/klokk-avatars";
 import { buildTrackingPayload, postTrackingEvent } from "@/lib/klokk-tracking";
 
 export const Route = createFileRoute("/event/$token/")({
@@ -34,6 +36,7 @@ function ParticipantResponse() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [submitted, setSubmitted] = useState(false);
 
@@ -42,6 +45,12 @@ function ParticipantResponse() {
     () => event?.responses.find((r) => r.email.toLowerCase() === email.trim().toLowerCase()),
     [event, email],
   );
+
+  // Load prior avatar once the prior response is found.
+  useEffect(() => {
+    if (prior?.avatarUrl && !avatarUrl) setAvatarUrl(prior.avatarUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prior?.avatarUrl]);
 
   if (!event) {
     return (
@@ -136,6 +145,7 @@ function ParticipantResponse() {
         lastName: lastName.trim(),
         email: email.trim(),
         slotIds: [...selected],
+        avatarUrl,
       });
       setSubmitted(true);
       toast.success("Availability submitted");
@@ -240,6 +250,22 @@ function ParticipantResponse() {
                 </p>
               )}
             </Field>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground">
+                Profile photo (optional)
+              </Label>
+              <AvatarUpload
+                currentUrl={avatarUrl}
+                firstName={firstName}
+                lastName={lastName}
+                upload={(file) => uploadParticipantAvatar(token, file)}
+                onUploaded={(url) => setAvatarUrl(url)}
+                onRemove={() => setAvatarUrl(undefined)}
+                label="Your photo"
+                size={72}
+              />
+            </div>
 
             <div>
               <Label className="mb-3 block">When can you make it?</Label>

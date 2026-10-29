@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/klokk/status-badge";
+import { Avatar } from "@/components/klokk/avatar";
 import { useCurrentAccount, useOwnedEvents, useSession } from "@/lib/klokk-hooks";
 import { computeStatus } from "@/lib/klokk-store";
 import { formatDateShort, relativeDeadline, daysUntil } from "@/lib/klokk-format";
@@ -55,11 +56,20 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">Welcome back</p>
-          <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-foreground">
-            {account.firstName}'s events
-          </h1>
+        <div className="flex items-center gap-4">
+          <Avatar
+            url={account.avatarUrl}
+            firstName={account.firstName}
+            lastName={account.lastName}
+            size={56}
+            className="ring-2 ring-border"
+          />
+          <div>
+            <p className="text-sm text-muted-foreground">Welcome back</p>
+            <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-foreground">
+              {account.firstName}'s events
+            </h1>
+          </div>
         </div>
         <Link to="/events/new">
           <Button size="lg" className="shadow-premium">

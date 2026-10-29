@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/klokk/status-badge";
 import { AvailabilityHeatMap, bestSlot } from "@/components/klokk/heat-map";
 import { EventChat } from "@/components/klokk/event-chat";
+import { Avatar } from "@/components/klokk/avatar";
 import {
   useUpdateEvent,
   useDeleteEvent,
@@ -439,17 +440,20 @@ function NamedList({
         );
         return (
           <li key={p.id} className="flex items-center justify-between px-4 py-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">
-                {p.firstName} {p.lastName}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">{p.email}</p>
-              {response && (
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  {response.slotIds.length} slot{response.slotIds.length === 1 ? "" : "s"} ·{" "}
-                  {formatDate(response.submittedAt)}
+            <div className="flex min-w-0 items-center gap-3">
+              <Avatar url={p.avatarUrl} firstName={p.firstName} lastName={p.lastName} size={36} />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {p.firstName} {p.lastName}
                 </p>
-              )}
+                <p className="truncate text-xs text-muted-foreground">{p.email}</p>
+                {response && (
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {response.slotIds.length} slot{response.slotIds.length === 1 ? "" : "s"} ·{" "}
+                    {formatDate(response.submittedAt)}
+                  </p>
+                )}
+              </div>
             </div>
             <span
               className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
@@ -477,11 +481,14 @@ function OpenList({ event }: { event: KlokkEvent }) {
     <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
       {event.responses.map((r) => (
         <li key={r.id} className="flex items-center justify-between px-4 py-3">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-foreground">
-              {r.firstName} {r.lastName}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">{r.email}</p>
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar url={r.avatarUrl} firstName={r.firstName} lastName={r.lastName} size={36} />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">
+                {r.firstName} {r.lastName}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">{r.email}</p>
+            </div>
           </div>
           <span className="shrink-0 text-xs text-muted-foreground">
             {r.slotIds.length} slot{r.slotIds.length === 1 ? "" : "s"}

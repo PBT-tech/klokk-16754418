@@ -108,6 +108,7 @@ export type Database = {
       }
       named_participants: {
         Row: {
+          avatar_url: string | null
           email: string
           event_id: string
           first_name: string
@@ -115,6 +116,7 @@ export type Database = {
           last_name: string
         }
         Insert: {
+          avatar_url?: string | null
           email: string
           event_id: string
           first_name: string
@@ -122,6 +124,7 @@ export type Database = {
           last_name: string
         }
         Update: {
+          avatar_url?: string | null
           email?: string
           event_id?: string
           first_name?: string
@@ -140,6 +143,7 @@ export type Database = {
       }
       participant_responses: {
         Row: {
+          avatar_url: string | null
           email: string
           event_id: string
           first_name: string
@@ -150,6 +154,7 @@ export type Database = {
           submitted_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
           email: string
           event_id: string
           first_name: string
@@ -160,6 +165,7 @@ export type Database = {
           submitted_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
           email?: string
           event_id?: string
           first_name?: string
@@ -181,6 +187,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string | null
           email: string | null
           email_verified: boolean | null
@@ -195,6 +202,7 @@ export type Database = {
           sms_low_balance_threshold: number | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string | null
           email?: string | null
           email_verified?: boolean | null
@@ -209,6 +217,7 @@ export type Database = {
           sms_low_balance_threshold?: number | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string | null
           email?: string | null
           email_verified?: boolean | null

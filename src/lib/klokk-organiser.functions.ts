@@ -18,8 +18,8 @@ import type { ChatMessage, KlokkEvent, NamedParticipant, TimeSlot } from "./klok
 const EVENT_SELECT = `
   *,
   time_slots ( id, date, start_time, end_time ),
-  named_participants ( id, first_name, last_name, email ),
-  participant_responses ( id, first_name, last_name, email, slot_ids, submitted_at ),
+  named_participants ( id, first_name, last_name, email, avatar_url ),
+  participant_responses ( id, first_name, last_name, email, slot_ids, notes, avatar_url, submitted_at ),
   chat_messages ( id, author_name, author_email, is_organiser, text, pinned, created_at )
 `;
 
@@ -81,6 +81,7 @@ export const updateMyProfile = createServerFn({ method: "POST" })
       email: z.string().optional(),
       firstName: z.string().optional(),
       lastName: z.string().optional(),
+      avatarUrl: z.string().nullable().optional(),
       smsCredits: z.number().optional(),
       smsAutoTopUp: z.boolean().optional(),
       smsLowBalanceThreshold: z.number().optional(),
@@ -94,6 +95,7 @@ export const updateMyProfile = createServerFn({ method: "POST" })
     if (data.email !== undefined) patch["email"] = data.email;
     if (data.firstName !== undefined) patch["first_name"] = data.firstName;
     if (data.lastName !== undefined) patch["last_name"] = data.lastName;
+    if (data.avatarUrl !== undefined) patch["avatar_url"] = data.avatarUrl;
     if (data.smsCredits !== undefined) patch["sms_credits"] = data.smsCredits;
     if (data.smsAutoTopUp !== undefined) patch["sms_auto_top_up"] = data.smsAutoTopUp;
     if (data.smsLowBalanceThreshold !== undefined)
@@ -150,6 +152,7 @@ const namedSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
   email: z.string().email(),
+  avatarUrl: z.string().optional(),
 });
 
 export const createMyEvent = createServerFn({ method: "POST" })
@@ -203,12 +206,13 @@ export const createMyEvent = createServerFn({ method: "POST" })
 
     if (data.participationMode === "named" && data.namedParticipants.length > 0) {
       const { error: nErr } = await supabase.from("named_participants").insert(
-        data.namedParticipants.map((p: NamedParticipant) => ({
+        data.namedParticipants.map((p) => ({
           id: p.id,
           event_id: eventId,
           first_name: p.firstName,
           last_name: p.lastName,
           email: p.email,
+          avatar_url: p.avatarUrl ?? null,
         })),
       );
       if (nErr) throw nErr;

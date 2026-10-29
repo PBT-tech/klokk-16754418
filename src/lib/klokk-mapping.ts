@@ -19,7 +19,13 @@ export function mapSlot(r: any): TimeSlot {
 }
 
 export function mapNamed(r: any): NamedParticipant {
-  return { id: r.id, firstName: r.first_name, lastName: r.last_name, email: r.email };
+  return {
+    id: r.id,
+    firstName: r.first_name,
+    lastName: r.last_name,
+    email: r.email,
+    avatarUrl: r.avatar_url ?? undefined,
+  };
 }
 
 export function mapResponse(r: any): ParticipantResponse {
@@ -30,6 +36,7 @@ export function mapResponse(r: any): ParticipantResponse {
     email: r.email,
     slotIds: r.slot_ids ?? [],
     notes: r.notes ?? undefined,
+    avatarUrl: r.avatar_url ?? undefined,
     submittedAt: r.submitted_at,
   };
 }
@@ -106,6 +113,7 @@ export function mapProfile(row: any, usage: any[]): KlokkAccount {
     email: row.email ?? "",
     firstName: row.first_name ?? "",
     lastName: row.last_name ?? "",
+    avatarUrl: row.avatar_url ?? undefined,
     emailVerified: row.email_verified ?? false,
     createdAt: row.created_at,
     plan,

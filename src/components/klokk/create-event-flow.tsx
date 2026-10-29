@@ -20,15 +20,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  CREATE_STEPS,
-  emptyDraft,
-  sortSlots,
-  toLocalInput,
-  type Draft,
-} from "@/lib/klokk-create";
+import { CREATE_STEPS, emptyDraft, sortSlots, toLocalInput, type Draft } from "@/lib/klokk-create";
 import { SlotsStep } from "./create-event-slots";
+import { Avatar, AvatarUpload } from "@/components/klokk/avatar";
 import { cryptoId, makeToken } from "@/lib/klokk-store";
+import { uploadParticipantAvatar } from "@/lib/klokk-avatars";
 import { useCreateEvent } from "@/lib/klokk-hooks";
 import { toSlotLabel } from "@/lib/klokk-format";
 import type { KlokkAccount, KlokkEvent, NamedParticipant } from "@/lib/klokk-types";
@@ -89,6 +85,7 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
                 firstName: p.firstName,
                 lastName: p.lastName,
                 email: p.email,
+                avatarUrl: p.avatarUrl,
               }))
             : [],
       });
@@ -235,7 +232,6 @@ function DetailsStep({
   );
 }
 
-
 function ParticipantsStep({
   draft,
   set,
@@ -323,6 +319,18 @@ function NamedList({
     setEmail("");
   };
 
+  const addAvatar = (id: string, url: string) =>
+    set(
+      "namedParticipants",
+      draft.namedParticipants.map((p) => (p.id === id ? { ...p, avatarUrl: url } : p)),
+    );
+
+  const removeAvatar = (id: string) =>
+    set(
+      "namedParticipants",
+      draft.namedParticipants.map((p) => (p.id === id ? { ...p, avatarUrl: undefined } : p)),
+    );
+
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1.4fr_auto]">
@@ -347,25 +355,40 @@ function NamedList({
         <ul className="divide-y divide-border rounded-xl border border-border">
           {draft.namedParticipants.map((p) => (
             <li key={p.id} className="flex items-center justify-between px-4 py-3">
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  {p.firstName} {p.lastName}
-                </p>
-                <p className="text-xs text-muted-foreground">{p.email}</p>
+              <div className="flex items-center gap-3">
+                <Avatar url={p.avatarUrl} firstName={p.firstName} lastName={p.lastName} size={36} />
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {p.firstName} {p.lastName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{p.email}</p>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() =>
-                  set(
-                    "namedParticipants",
-                    draft.namedParticipants.filter((x) => x.id !== p.id),
-                  )
-                }
-                className="text-muted-foreground hover:text-destructive"
-                aria-label="Remove"
-              >
-                <X className="size-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <AvatarUpload
+                  currentUrl={p.avatarUrl}
+                  firstName={p.firstName}
+                  lastName={p.lastName}
+                  upload={(file) => uploadParticipantAvatar(draft.title || "draft", file)}
+                  onUploaded={(url) => addAvatar(p.id, url)}
+                  onRemove={() => removeAvatar(p.id)}
+                  label=""
+                  size={32}
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    set(
+                      "namedParticipants",
+                      draft.namedParticipants.filter((x) => x.id !== p.id),
+                    )
+                  }
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label="Remove"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
             </li>
           ))}
         </ul>

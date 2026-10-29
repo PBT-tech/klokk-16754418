@@ -11,8 +11,8 @@ import type { KlokkEvent } from "./klokk-types";
 const EVENT_SELECT = `
   *,
   time_slots ( id, date, start_time, end_time ),
-  named_participants ( id, first_name, last_name, email ),
-  participant_responses ( id, first_name, last_name, email, slot_ids, notes, submitted_at ),
+  named_participants ( id, first_name, last_name, email, avatar_url ),
+  participant_responses ( id, first_name, last_name, email, slot_ids, notes, avatar_url, submitted_at ),
   chat_messages ( id, author_name, author_email, is_organiser, text, pinned, created_at )
 `;
 
@@ -50,6 +50,7 @@ export const submitResponse = createServerFn({ method: "POST" })
       email: z.string().email(),
       slotIds: z.array(z.string()).min(1),
       notes: z.string().optional(),
+      avatarUrl: z.string().optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -75,6 +76,7 @@ export const submitResponse = createServerFn({ method: "POST" })
         email: data.email,
         slot_ids: data.slotIds,
         notes: data.notes?.trim() || null,
+        avatar_url: data.avatarUrl ?? null,
         submitted_at: new Date().toISOString(),
       },
       { onConflict: "event_id,email" },

@@ -20,6 +20,7 @@ export interface NamedParticipant {
   firstName: string;
   lastName: string;
   email: string;
+  avatarUrl?: string | undefined;
 }
 
 export interface ParticipantResponse {
@@ -29,7 +30,8 @@ export interface ParticipantResponse {
   email: string;
   /** slot ids the participant marked available */
   slotIds: string[];
-  notes?: string;
+  notes?: string | undefined;
+  avatarUrl?: string | undefined;
   submittedAt: string; // ISO
 }
 
@@ -71,6 +73,7 @@ export interface KlokkAccount {
   email: string;
   firstName: string;
   lastName: string;
+  avatarUrl?: string;
   emailVerified: boolean;
   createdAt: string;
   plan: KlokkPlanTier;

@@ -24,6 +24,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { PaymentCheckoutBlock } from "@/integrations/payments";
+import { AvatarUpload, Avatar } from "@/components/klokk/avatar";
 import {
   useCurrentAccount,
   useSession,
@@ -33,6 +34,7 @@ import {
   useAuthActions,
 } from "@/lib/klokk-hooks";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadOrganiserAvatar } from "@/lib/klokk-avatars";
 import { maskPhone } from "@/lib/klokk-format";
 import type { NotificationPrefs } from "@/lib/klokk-types";
 
@@ -178,7 +180,26 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
     <div className="space-y-8">
       <Card>
         <CardHeader title="Profile" subtitle="Your account details" />
-        <div className="space-y-4">
+        <div className="space-y-5">
+          <AvatarUpload
+            currentUrl={account.avatarUrl}
+            firstName={firstName}
+            lastName={lastName}
+            upload={(file) => uploadOrganiserAvatar(account.id, file)}
+            onUploaded={(url) => {
+              updateProfile.mutate(
+                { avatarUrl: url },
+                { onSuccess: () => toast.success("Profile photo saved") },
+              );
+            }}
+            onRemove={() => {
+              updateProfile.mutate(
+                { avatarUrl: null },
+                { onSuccess: () => toast.success("Photo removed") },
+              );
+            }}
+            label="Profile photo"
+          />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-xs">First name</Label>

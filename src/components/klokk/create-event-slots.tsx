@@ -179,7 +179,8 @@ export function SlotsStep({
         ) : (
           <Button className="mt-4 w-full" onClick={addSingleSlot} variant="default">
             <Plus className="size-4" />
-            Add {singleDate ? toSlotLabel(singleDate.toISOString().slice(0, 10), start, end) : "slot"}
+            Add{" "}
+            {singleDate ? toSlotLabel(singleDate.toISOString().slice(0, 10), start, end) : "slot"}
           </Button>
         )}
       </div>
@@ -201,7 +202,8 @@ export function SlotsStep({
         </div>
         {draft.slots.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-surface/40 p-8 text-center text-sm text-muted-foreground">
-            Select a start & end date range and a time window, then click add to generate candidate slots.
+            Select a start & end date range and a time window, then click add to generate candidate
+            slots.
           </div>
         ) : (
           <ul className="max-h-[380px] space-y-2 overflow-y-auto pr-1">
