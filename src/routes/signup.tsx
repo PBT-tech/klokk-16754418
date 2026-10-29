@@ -1,9 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowRight, CheckCircle2, Mail } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -43,10 +42,8 @@ type FormValues = z.infer<typeof schema>;
 function SignUp() {
   const navigate = useNavigate();
   const session = useSession();
-  const [created, setCreated] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState("");
 
-  if (session && !created) {
+  if (session) {
     navigate({ to: "/events/new" });
   }
 
@@ -59,11 +56,9 @@ function SignUp() {
   const passwordValue = watch("password");
 
   const onSubmit = async (values: FormValues) => {
-    const redirect = typeof window !== "undefined" ? `${window.location.origin}/signin` : undefined;
-    const options: { data: object; emailRedirectTo?: string } = {
+    const options: { data: object } = {
       data: { first_name: values.firstName, last_name: values.lastName },
     };
-    if (redirect) options.emailRedirectTo = redirect;
 
     let signUpResult;
     try {
@@ -86,7 +81,8 @@ function SignUp() {
       toast.error(error.message);
       return;
     }
-    // Create the profile row if session/user is available (best-effort, RLS allows self-insert)
+
+    // Create the profile row (best-effort, RLS allows self-insert).
     if (data?.user) {
       try {
         await supabase.from("profiles").upsert({
@@ -94,12 +90,13 @@ function SignUp() {
           email: values.email,
           first_name: values.firstName,
           last_name: values.lastName,
-          email_verified: false,
+          email_verified: true,
         });
       } catch {
         /* best-effort */
       }
     }
+
     // Fire the CRM form-tracking event so a contact is created in the
     // sub-account. Fire-and-forget — never blocks the UX.
     try {
@@ -121,6 +118,7 @@ function SignUp() {
     } catch {
       /* best-effort */
     }
+
     // Notify the sub-account owner that a new organiser signed up.
     try {
       sendSignupNotification({
@@ -130,66 +128,10 @@ function SignUp() {
     } catch {
       /* best-effort */
     }
-    setPendingEmail(values.email);
-    setCreated(true);
-    toast.success("Account created — check your email to verify");
-  };
 
-  if (created) {
-    return (
-      <div className="min-h-[calc(100vh-4rem)] w-full bg-signup-page-bg">
-        <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-4 py-12">
-          <div className="rounded-2xl border border-border bg-signup-section-bg p-8 text-center text-card-foreground shadow-premium">
-            <div className="mx-auto inline-flex size-14 items-center justify-center rounded-full bg-accent/15 text-accent">
-              <Mail className="size-6" />
-            </div>
-            <h1 className="mt-5 font-display text-2xl font-semibold text-card-foreground">
-              Verify your email
-            </h1>
-            <p className="mt-2 text-sm text-card-foreground/80">
-              We sent a verification link to{" "}
-              <span className="font-medium text-card-foreground">{pendingEmail}</span>. You'll need
-              to verify before creating your first event.
-            </p>
-            <div className="mt-6 space-y-2">
-              <Button
-                className="w-full"
-                onClick={() => {
-                  toast.success("Email verified");
-                  navigate({ to: "/events/new" });
-                }}
-              >
-                <CheckCircle2 className="size-4" />
-                I've verified — continue
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full bg-card text-card-foreground border-border hover:bg-card/90"
-                onClick={async () => {
-                  const redirect =
-                    typeof window !== "undefined" ? `${window.location.origin}/signin` : undefined;
-                  const opts: { emailRedirectTo?: string } = {};
-                  if (redirect) opts.emailRedirectTo = redirect;
-                  const { error } = await supabase.auth.resend({
-                    type: "signup",
-                    email: pendingEmail,
-                    options: opts,
-                  });
-                  if (error) toast.error(error.message);
-                  else toast.success("Verification email resent");
-                }}
-              >
-                Resend verification email
-              </Button>
-            </div>
-            <p className="mt-4 text-xs text-card-foreground/70">
-              Click the link in your email, then return here to continue.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+    toast.success("Account created — welcome to Klokk");
+    navigate({ to: "/events/new" });
+  };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] w-full bg-signup-page-bg">
