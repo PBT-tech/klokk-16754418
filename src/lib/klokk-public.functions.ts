@@ -12,7 +12,7 @@ const EVENT_SELECT = `
   *,
   time_slots ( id, date, start_time, end_time ),
   named_participants ( id, first_name, last_name, email ),
-  participant_responses ( id, first_name, last_name, email, slot_ids, submitted_at ),
+  participant_responses ( id, first_name, last_name, email, slot_ids, notes, submitted_at ),
   chat_messages ( id, author_name, author_email, is_organiser, text, pinned, created_at )
 `;
 
@@ -49,6 +49,7 @@ export const submitResponse = createServerFn({ method: "POST" })
       lastName: z.string().min(1),
       email: z.string().email(),
       slotIds: z.array(z.string()).min(1),
+      notes: z.string().optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -73,6 +74,7 @@ export const submitResponse = createServerFn({ method: "POST" })
         last_name: data.lastName,
         email: data.email,
         slot_ids: data.slotIds,
+        notes: data.notes?.trim() || null,
         submitted_at: new Date().toISOString(),
       },
       { onConflict: "event_id,email" },

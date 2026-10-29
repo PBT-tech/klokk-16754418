@@ -29,6 +29,7 @@ export interface ParticipantResponse {
   email: string;
   /** slot ids the participant marked available */
   slotIds: string[];
+  notes?: string;
   submittedAt: string; // ISO
 }
 

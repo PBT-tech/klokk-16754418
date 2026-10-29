@@ -20,15 +20,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
 import {
   CREATE_STEPS,
   emptyDraft,
-  makeSlot,
   sortSlots,
   toLocalInput,
   type Draft,
 } from "@/lib/klokk-create";
+import { SlotsStep } from "./create-event-slots";
 import { cryptoId, makeToken } from "@/lib/klokk-store";
 import { useCreateEvent } from "@/lib/klokk-hooks";
 import { toSlotLabel } from "@/lib/klokk-format";
@@ -125,9 +124,10 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
 
         <div className="mt-8 flex items-center justify-between border-t border-border/70 pt-6">
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={step === 0}
+            className="text-foreground border-border hover:bg-surface font-medium disabled:opacity-40"
           >
             <ArrowLeft className="size-4" />
             Back
@@ -190,126 +190,51 @@ function DetailsStep({
   set: <K extends keyof Draft>(key: K, value: Draft[K]) => void;
 }) {
   return (
-    <div className="space-y-5">
-      <div className="space-y-1.5">
-        <Label htmlFor="title">Event title</Label>
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="title" className="text-sm font-semibold text-foreground">
+          Event title <span className="text-accent">*</span>
+        </Label>
         <Input
           id="title"
-          placeholder="e.g. Q3 Strategy Sync"
+          placeholder="e.g. Canberra Business Women Lunch"
           value={draft.title}
           onChange={(e) => set("title", e.target.value)}
+          className="bg-background text-accent placeholder:text-muted-foreground/70"
         />
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="desc">Description (optional)</Label>
+      <div className="space-y-2">
+        <Label htmlFor="desc" className="text-sm font-semibold text-foreground">
+          Meeting description / details (optional)
+        </Label>
         <Textarea
           id="desc"
           rows={3}
-          placeholder="What's this meeting about?"
+          placeholder="What's this meeting about? Add agenda, expectations, or background details."
           value={draft.description}
           onChange={(e) => set("description", e.target.value)}
+          className="bg-background text-accent placeholder:text-muted-foreground/70"
         />
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="loc">Location (optional)</Label>
+      <div className="space-y-2">
+        <Label htmlFor="loc" className="text-sm font-semibold text-foreground">
+          Meeting location or link (optional)
+        </Label>
         <Input
           id="loc"
-          placeholder="e.g. Studio B · 4th Floor, or a video call link"
+          placeholder="e.g. The Ottoman Restaurant, Studio B · 4th Floor, or Zoom link"
           value={draft.location}
           onChange={(e) => set("location", e.target.value)}
+          className="bg-background text-accent placeholder:text-muted-foreground/70"
         />
+        <p className="text-xs text-muted-foreground">
+          Enter an address, venue name, or virtual meeting URL.
+        </p>
       </div>
     </div>
   );
 }
 
-function SlotsStep({
-  draft,
-  set,
-}: {
-  draft: Draft;
-  set: <K extends keyof Draft>(key: K, value: Draft[K]) => void;
-}) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [start, setStart] = useState("09:00");
-  const [end, setEnd] = useState("10:00");
-
-  const addSlot = () => {
-    const slot = makeSlot(date, start, end);
-    if (!slot) {
-      toast.error("Start must be before end");
-      return;
-    }
-    if (draft.slots.some((s) => s.id === slot.id)) {
-      toast.error("That slot already exists");
-      return;
-    }
-    set("slots", sortSlots([...draft.slots, slot]));
-  };
-
-  return (
-    <div className="grid gap-8 lg:grid-cols-2">
-      <div>
-        <Label className="mb-3 block">Pick a date</Label>
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={(d) => setDate(d ?? undefined)}
-          className="rounded-xl border border-border p-3"
-        />
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Start</Label>
-            <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">End</Label>
-            <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
-          </div>
-        </div>
-        <Button className="mt-4 w-full" onClick={addSlot} variant="outline">
-          <Plus className="size-4" />
-          Add {date ? toSlotLabel(date.toISOString().slice(0, 10), start, end) : "slot"}
-        </Button>
-      </div>
-
-      <div>
-        <Label className="mb-3 block">Candidate slots ({draft.slots.length})</Label>
-        {draft.slots.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-surface/40 p-8 text-center text-sm text-muted-foreground">
-            Add candidate time slots for participants to vote on.
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {draft.slots.map((s) => (
-              <li
-                key={s.id}
-                className="flex items-center justify-between rounded-xl border border-border bg-background px-4 py-3"
-              >
-                <span className="text-sm font-medium text-foreground">
-                  {toSlotLabel(s.date, s.startTime, s.endTime)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    set(
-                      "slots",
-                      draft.slots.filter((x) => x.id !== s.id),
-                    )
-                  }
-                  className="text-muted-foreground transition-colors hover:text-destructive"
-                  aria-label="Remove slot"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function ParticipantsStep({
   draft,

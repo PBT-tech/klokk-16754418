@@ -116,7 +116,7 @@
   --secondary: oklch(0.7642 0.0209 64.46);
   --secondary-foreground: oklch(0.2915 0.0611 165.08);
   --muted: oklch(0.9543 0.0424 115.4);
-  --muted-foreground: oklch(0.6097 0.0267 62.93);
+  --muted-foreground: oklch(0.35 0.04 165.08);
   /* Accent 1 — deep wine red (CTAs / active states) */
   --accent: oklch(0.4941 0.0933 19.23);
   --accent-foreground: oklch(0.901 0.0214 13.85);

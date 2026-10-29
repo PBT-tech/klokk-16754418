@@ -29,6 +29,7 @@ export function mapResponse(r: any): ParticipantResponse {
     lastName: r.last_name,
     email: r.email,
     slotIds: r.slot_ids ?? [],
+    notes: r.notes ?? undefined,
     submittedAt: r.submitted_at,
   };
 }
