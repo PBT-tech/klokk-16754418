@@ -80,7 +80,26 @@ export function mapSmsUsage(r: any): SmsUsageEntry {
   };
 }
 
+/**
+ * SMS credits included with a plan, as a percentage of the plan fee.
+ * Free accounts get none; Casual 10%, Organiser 15%, Teams 20% of their fee.
+ * (Computed from each plan's standard price; rounded to whole credits.)
+ */
+export function includedSmsCreditsForPlan(plan: string | null | undefined): number {
+  switch (plan) {
+    case "casual":
+      return 3; // 10% of $25 ≈ 2.5 → 3
+    case "organiser":
+      return 3; // 15% of $17 ≈ 2.55 → 3
+    case "teams":
+      return 7; // 20% of $35 = 7
+    default:
+      return 0; // free (and any unknown plan) — no included credits
+  }
+}
+
 export function mapProfile(row: any, usage: any[]): KlokkAccount {
+  const plan = row.plan ?? "free";
   return {
     id: row.id,
     email: row.email ?? "",
@@ -88,8 +107,11 @@ export function mapProfile(row: any, usage: any[]): KlokkAccount {
     lastName: row.last_name ?? "",
     emailVerified: row.email_verified ?? false,
     createdAt: row.created_at,
-    plan: row.plan ?? "free",
-    smsCredits: row.sms_credits ?? 0,
+    plan,
+    // Free accounts get no included SMS credits. Paid plans get their
+    // fee-percentage worth; any credits already on the row (e.g. purchased
+    // top-ups) take precedence over the computed default.
+    smsCredits: plan === "free" ? 0 : (row.sms_credits ?? includedSmsCreditsForPlan(plan)),
     smsAutoTopUp: row.sms_auto_top_up ?? false,
     smsLowBalanceThreshold: row.sms_low_balance_threshold ?? 50,
     smsUsageLog: (usage ?? []).map(mapSmsUsage),

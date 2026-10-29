@@ -118,12 +118,25 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
   const updateProfile = useUpdateProfile();
   const deleteAccount = useDeleteAccount();
   const { signOut } = useAuthActions();
+  const [firstName, setFirstName] = useState(account?.firstName ?? "");
+  const [lastName, setLastName] = useState(account?.lastName ?? "");
   const [email, setEmail] = useState(account?.email ?? "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!account) return null;
+
+  const saveName = () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.error("First and last name can't be empty");
+      return;
+    }
+    updateProfile.mutate(
+      { firstName: firstName.trim(), lastName: lastName.trim() },
+      { onSuccess: () => toast.success("Profile name updated") },
+    );
+  };
 
   const saveEmail = async () => {
     if (!email.trim()) {
@@ -170,13 +183,25 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
       <Card>
         <CardHeader title="Profile" subtitle="Your account details" />
         <div className="space-y-4">
-          <Row label="Name" value={`${account.firstName} ${account.lastName}`} />
-          <Row label="Email" value={account.email} verified={account.emailVerified} />
-          <div className="space-y-1.5">
-            <Label className="text-xs">Update email</Label>
-            <div className="flex gap-2">
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} />
-              <Button onClick={saveEmail}>Save</Button>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs">First name</Label>
+              <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Last name</Label>
+              <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </div>
+          </div>
+          <Button onClick={saveName}>Save name</Button>
+          <div className="space-y-4 border-t border-border/60 pt-4">
+            <Row label="Email" value={account.email} verified={account.emailVerified} />
+            <div className="space-y-1.5">
+              <Label className="text-xs">Update email</Label>
+              <div className="flex gap-2">
+                <Input value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Button onClick={saveEmail}>Save</Button>
+              </div>
             </div>
           </div>
         </div>
@@ -307,7 +332,7 @@ function SmsTab({ account }: { account: NonNullable<ReturnType<typeof useCurrent
               className="max-w-xs"
             />
           </div>
-          <Button onClick={saveAuto} variant="outline">
+          <Button onClick={saveAuto} variant="outline" className="text-sms-save-btn-text">
             <RefreshCw className="size-4" />
             Save auto-top-up
           </Button>

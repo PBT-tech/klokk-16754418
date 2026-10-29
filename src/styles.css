@@ -88,6 +88,7 @@
   --color-popular-panel-border: var(--popular-panel-border);
   --color-organiser-hover-bg: var(--organiser-hover-bg);
   --color-organiser-hover-text: var(--organiser-hover-text);
+  --color-sms-save-btn-text: var(--sms-save-btn-text);
   --font-display: "DynaPuff", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Red Hat Display", ui-sans-serif, system-ui, sans-serif;
   --font-script: "Playwrite VN", ui-serif, Georgia, serif;
@@ -173,6 +174,7 @@
   --popular-panel-border: oklch(0.4941 0.0933 19.23);
   --organiser-hover-bg: oklch(0.563 0.088 169.6);
   --organiser-hover-text: oklch(0.2915 0.0611 165.08);
+  --sms-save-btn-text: oklch(0.563 0.088 169.6);
 }
 
 .dark {
@@ -254,6 +256,7 @@
   ); /* light wine — Get Organiser hover text (dark) */
   --popular-panel-border: oklch(0.802 0.042 238.2);
   --organiser-hover-bg: oklch(0.563 0.088 169.6);
+  --sms-save-btn-text: oklch(0.563 0.088 169.6);
 }
 
 @layer base {

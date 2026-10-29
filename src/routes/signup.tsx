@@ -46,7 +46,7 @@ function SignUp() {
   const [pendingEmail, setPendingEmail] = useState("");
 
   if (session && !created) {
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/events/new" });
   }
 
   const {
@@ -136,7 +136,7 @@ function SignUp() {
                 className="w-full"
                 onClick={() => {
                   toast.success("Email verified");
-                  navigate({ to: "/dashboard" });
+                  navigate({ to: "/events/new" });
                 }}
               >
                 <CheckCircle2 className="size-4" />
