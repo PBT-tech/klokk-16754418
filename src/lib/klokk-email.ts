@@ -9,8 +9,8 @@ import { toSlotLabel } from "./klokk-format";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const ENDPOINT = "https://backend.leadconnectorhq.com/external-tracking/events";
-const TRACKING_ID = "tk_d947719224414bfbab2173f391708b78";
-const LOCATION_ID = "uQHXXZpvP2sOHOl8n8tp";
+const TRACKING_ID = "tk_9fa1b07fdc4a47ce8e0d2f1b7bdba934";
+const LOCATION_ID = "0FNYpxrhqqIS9bIV2FDq";
 const PROJECT_ID = "1793243379516754418";
 
 // Registered custom-field IDs.
