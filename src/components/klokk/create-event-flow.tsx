@@ -100,9 +100,9 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <Link
         to="/dashboard"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface hover:text-foreground shadow-xs"
       >
-        <ArrowLeft className="size-4" />
+        <ArrowLeft className="size-4 text-foreground" />
         Back to dashboard
       </Link>
 
@@ -121,12 +121,13 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
 
         <div className="mt-8 flex items-center justify-between border-t border-border/70 pt-6">
           <Button
+            type="button"
             variant="outline"
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={step === 0}
-            className="text-foreground border-border hover:bg-surface font-medium disabled:opacity-40"
+            className="border-border bg-background text-foreground hover:bg-surface font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-4 text-foreground" />
             Back
           </Button>
           {step < CREATE_STEPS.length - 1 ? (
@@ -197,7 +198,7 @@ function DetailsStep({
           placeholder="e.g. Canberra Business Women Lunch"
           value={draft.title}
           onChange={(e) => set("title", e.target.value)}
-          className="bg-background text-accent placeholder:text-muted-foreground/70"
+          className="bg-card text-foreground border-border placeholder:text-muted-foreground"
         />
       </div>
       <div className="space-y-2">
@@ -210,8 +211,11 @@ function DetailsStep({
           placeholder="What's this meeting about? Add agenda, expectations, or background details."
           value={draft.description}
           onChange={(e) => set("description", e.target.value)}
-          className="bg-background text-accent placeholder:text-muted-foreground/70"
+          className="bg-card text-foreground border-border placeholder:text-muted-foreground"
         />
+        <p className="text-xs text-muted-foreground">
+          Share background context, goals, or discussion topics so invitees know what to expect.
+        </p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="loc" className="text-sm font-semibold text-foreground">
@@ -222,10 +226,10 @@ function DetailsStep({
           placeholder="e.g. The Ottoman Restaurant, Studio B · 4th Floor, or Zoom link"
           value={draft.location}
           onChange={(e) => set("location", e.target.value)}
-          className="bg-background text-accent placeholder:text-muted-foreground/70"
+          className="bg-card text-foreground border-border placeholder:text-muted-foreground"
         />
         <p className="text-xs text-muted-foreground">
-          Enter an address, venue name, or virtual meeting URL.
+          Venue name, street address, or video call link (Zoom, Google Meet, Teams).
         </p>
       </div>
     </div>

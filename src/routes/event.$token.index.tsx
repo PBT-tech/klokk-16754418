@@ -37,6 +37,7 @@ function ParticipantResponse() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
+  const [notes, setNotes] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [submitted, setSubmitted] = useState(false);
 
@@ -46,11 +47,12 @@ function ParticipantResponse() {
     [event, email],
   );
 
-  // Load prior avatar once the prior response is found.
+  // Load prior avatar and notes once the prior response is found.
   useEffect(() => {
     if (prior?.avatarUrl && !avatarUrl) setAvatarUrl(prior.avatarUrl);
+    if (prior?.notes && !notes) setNotes(prior.notes);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prior?.avatarUrl]);
+  }, [prior?.avatarUrl, prior?.notes]);
 
   if (!event) {
     return (
@@ -146,6 +148,7 @@ function ParticipantResponse() {
         email: email.trim(),
         slotIds: [...selected],
         avatarUrl,
+        notes: notes.trim() || undefined,
       });
       setSubmitted(true);
       toast.success("Availability submitted");
@@ -311,6 +314,23 @@ function ParticipantResponse() {
                   })}
                 </div>
               )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="notes" className="text-xs font-semibold text-foreground">
+                Add notes or dietary requirements (optional)
+              </Label>
+              <textarea
+                id="notes"
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. Can do Tuesday if by 3pm, vegetarian, or prefer online"
+                className="flex w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+              <p className="text-xs text-muted-foreground">
+                Organisers see any notes alongside your chosen dates and times.
+              </p>
             </div>
 
             <Button type="submit" className="w-full" size="lg">

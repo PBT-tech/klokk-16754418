@@ -448,10 +448,17 @@ function NamedList({
                 </p>
                 <p className="truncate text-xs text-muted-foreground">{p.email}</p>
                 {response && (
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    {response.slotIds.length} slot{response.slotIds.length === 1 ? "" : "s"} ·{" "}
-                    {formatDate(response.submittedAt)}
-                  </p>
+                  <>
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      {response.slotIds.length} slot{response.slotIds.length === 1 ? "" : "s"} ·{" "}
+                      {formatDate(response.submittedAt)}
+                    </p>
+                    {response.notes && (
+                      <p className="mt-1 text-xs italic text-accent bg-surface/60 rounded px-2 py-1 border border-border/50">
+                        "{response.notes}"
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -488,6 +495,11 @@ function OpenList({ event }: { event: KlokkEvent }) {
                 {r.firstName} {r.lastName}
               </p>
               <p className="truncate text-xs text-muted-foreground">{r.email}</p>
+              {r.notes && (
+                <p className="mt-1 text-xs italic text-accent bg-surface/60 rounded px-2 py-1 border border-border/50">
+                  "{r.notes}"
+                </p>
+              )}
             </div>
           </div>
           <span className="shrink-0 text-xs text-muted-foreground">

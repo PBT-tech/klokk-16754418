@@ -157,7 +157,7 @@ export function SlotsStep({
               type="time"
               value={start}
               onChange={(e) => setStart(e.target.value)}
-              className="bg-background text-accent"
+              className="bg-card text-foreground border-border"
             />
           </div>
           <div className="space-y-1.5">
@@ -166,7 +166,7 @@ export function SlotsStep({
               type="time"
               value={end}
               onChange={(e) => setEnd(e.target.value)}
-              className="bg-background text-accent"
+              className="bg-card text-foreground border-border"
             />
           </div>
         </div>
