@@ -90,6 +90,10 @@
   --color-organiser-hover-text: var(--organiser-hover-text);
   --color-sms-save-btn-text: var(--sms-save-btn-text);
   --color-embed-copy-btn-text: var(--embed-copy-btn-text);
+  --color-pw-weak: var(--pw-weak);
+  --color-pw-fair: var(--pw-fair);
+  --color-pw-good: var(--pw-good);
+  --color-pw-strong: var(--pw-strong);
   --font-display: "DynaPuff", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Red Hat Display", ui-sans-serif, system-ui, sans-serif;
   --font-script: "Playwrite VN", ui-serif, Georgia, serif;
@@ -177,6 +181,11 @@
   --organiser-hover-text: oklch(0.2915 0.0611 165.08);
   --sms-save-btn-text: oklch(0.563 0.088 169.6);
   --embed-copy-btn-text: oklch(0.974 0.027 116.1);
+  /* Password strength — light mode */
+  --pw-weak: oklch(0.4941 0.0933 19.23); /* wine red */
+  --pw-fair: oklch(0.68 0.14 56); /* warm amber */
+  --pw-good: oklch(0.563 0.088 169.6); /* #36866D teal-green */
+  --pw-strong: oklch(0.45 0.11 155); /* vivid green */
 }
 
 .dark {
@@ -260,6 +269,11 @@
   --organiser-hover-bg: oklch(0.563 0.088 169.6);
   --sms-save-btn-text: oklch(0.563 0.088 169.6);
   --embed-copy-btn-text: oklch(0.974 0.027 116.1);
+  /* Password strength — dark mode (lifted for the deep green base) */
+  --pw-weak: oklch(0.6 0.12 19);
+  --pw-fair: oklch(0.78 0.13 56);
+  --pw-good: oklch(0.802 0.042 238.2); /* muted blue */
+  --pw-strong: oklch(0.77 0.187 155.86); /* bright green */
 }
 
 @layer base {

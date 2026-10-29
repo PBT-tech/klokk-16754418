@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KlokkFullLogo } from "@/components/klokk/logo";
+import { PasswordStrength } from "@/components/klokk/password-strength";
 import { supabase } from "@/integrations/supabase/client";
 import { sendSignupNotification } from "@/lib/klokk-email";
 import { buildTrackingPayload, postTrackingEvent } from "@/lib/klokk-tracking";
@@ -52,8 +53,10 @@ function SignUp() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  const passwordValue = watch("password");
 
   const onSubmit = async (values: FormValues) => {
     const redirect = typeof window !== "undefined" ? `${window.location.origin}/signin` : undefined;
@@ -226,7 +229,9 @@ function SignUp() {
                 placeholder="At least 8 characters"
                 {...register("password")}
                 className="border-brand"
+                autoComplete="new-password"
               />
+              <PasswordStrength value={passwordValue ?? ""} />
             </Field>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               Create account
