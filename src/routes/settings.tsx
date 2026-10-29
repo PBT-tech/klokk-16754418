@@ -90,9 +90,9 @@ function Settings() {
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+            className={`inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
               tab === t.id
-                ? "border-primary text-foreground"
+                ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -202,11 +202,11 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
           />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="text-xs text-card-foreground">First name</Label>
+              <Label className="text-xs font-semibold text-card-foreground">First name</Label>
               <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-card-foreground">Last name</Label>
+              <Label className="text-xs font-semibold text-card-foreground">Last name</Label>
               <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </div>
           </div>
@@ -214,7 +214,7 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
           <div className="space-y-4 border-t border-border/60 pt-4">
             <Row label="Email" value={account.email} verified={account.emailVerified} />
             <div className="space-y-1.5">
-              <Label className="text-xs text-card-foreground">Update email</Label>
+              <Label className="text-xs font-semibold text-card-foreground">Update email</Label>
               <div className="flex gap-2">
                 <Input value={email} onChange={(e) => setEmail(e.target.value)} />
                 <Button onClick={saveEmail}>Save</Button>
@@ -228,7 +228,7 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
         <CardHeader title="Password" subtitle="Change your password" />
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-xs text-card-foreground">Current password</Label>
+            <Label className="text-xs font-semibold text-card-foreground">Current password</Label>
             <Input
               type="password"
               value={currentPassword}
@@ -236,7 +236,7 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-card-foreground">New password</Label>
+            <Label className="text-xs font-semibold text-card-foreground">New password</Label>
             <Input
               type="password"
               value={newPassword}

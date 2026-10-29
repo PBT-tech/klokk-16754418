@@ -142,8 +142,8 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
         {icon}
       </div>
       <div>
-        <p className="font-display text-2xl font-bold text-foreground">{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="font-display text-2xl font-bold text-card-foreground">{value}</p>
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
       </div>
     </div>
   );
@@ -151,7 +151,7 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-4 font-display text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+    <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.14em] text-foreground/80">
       {children}
     </h2>
   );
@@ -180,7 +180,7 @@ function EventCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate font-display text-lg font-semibold text-foreground">
+          <h3 className="truncate font-display text-lg font-semibold text-card-foreground">
             {event.title}
           </h3>
           {event.location && (
@@ -230,11 +230,11 @@ function EventCard({
 
 function EmptyState({ title, body, cta }: { title: string; body: string; cta?: boolean }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
-      <div className="mx-auto inline-flex size-12 items-center justify-center rounded-xl bg-surface text-muted-foreground">
+    <div className="rounded-2xl border border-dashed border-border bg-card/70 p-10 text-center">
+      <div className="mx-auto inline-flex size-12 items-center justify-center rounded-xl bg-surface-muted text-card-foreground">
         <Plus className="size-5" />
       </div>
-      <h3 className="mt-4 font-display text-lg font-semibold text-foreground">{title}</h3>
+      <h3 className="mt-4 font-display text-lg font-semibold text-card-foreground">{title}</h3>
       <p className="mx-auto mt-1.5 max-w-sm text-sm text-muted-foreground">{body}</p>
       {cta && (
         <Link to="/events/new">
