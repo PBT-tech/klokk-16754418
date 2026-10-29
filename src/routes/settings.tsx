@@ -202,11 +202,11 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
           />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="text-xs">First name</Label>
+              <Label className="text-xs text-card-foreground">First name</Label>
               <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Last name</Label>
+              <Label className="text-xs text-card-foreground">Last name</Label>
               <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </div>
           </div>
@@ -214,7 +214,7 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
           <div className="space-y-4 border-t border-border/60 pt-4">
             <Row label="Email" value={account.email} verified={account.emailVerified} />
             <div className="space-y-1.5">
-              <Label className="text-xs">Update email</Label>
+              <Label className="text-xs text-card-foreground">Update email</Label>
               <div className="flex gap-2">
                 <Input value={email} onChange={(e) => setEmail(e.target.value)} />
                 <Button onClick={saveEmail}>Save</Button>
@@ -228,7 +228,7 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
         <CardHeader title="Password" subtitle="Change your password" />
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-xs">Current password</Label>
+            <Label className="text-xs text-card-foreground">Current password</Label>
             <Input
               type="password"
               value={currentPassword}
@@ -236,7 +236,7 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">New password</Label>
+            <Label className="text-xs text-card-foreground">New password</Label>
             <Input
               type="password"
               value={newPassword}
@@ -316,7 +316,9 @@ function SmsTab({ account }: { account: NonNullable<ReturnType<typeof useCurrent
         />
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-display text-4xl font-bold text-foreground">{account.smsCredits}</p>
+            <p className="font-display text-4xl font-bold text-card-foreground">
+              {account.smsCredits}
+            </p>
             <p className="text-sm text-muted-foreground">credits available</p>
           </div>
           <Button onClick={() => setBuyOpen(true)} className="shadow-premium">
@@ -337,7 +339,7 @@ function SmsTab({ account }: { account: NonNullable<ReturnType<typeof useCurrent
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Enable auto-top-up</p>
+              <p className="text-sm font-medium text-card-foreground">Enable auto-top-up</p>
               <p className="text-xs text-muted-foreground">
                 Buy 100 credits when balance falls below your threshold.
               </p>
@@ -345,7 +347,7 @@ function SmsTab({ account }: { account: NonNullable<ReturnType<typeof useCurrent
             <Switch checked={autoTopUp} onCheckedChange={setAutoTopUp} disabled={isFree} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Low-balance threshold</Label>
+            <Label className="text-xs text-card-foreground">Low-balance threshold</Label>
             <Input
               type="number"
               min={0}
@@ -388,9 +390,9 @@ function SmsTab({ account }: { account: NonNullable<ReturnType<typeof useCurrent
                     <td className="px-4 py-2.5 font-mono text-muted-foreground">
                       {maskPhone(u.recipient)}
                     </td>
-                    <td className="px-4 py-2.5 text-foreground">{u.eventTitle}</td>
+                    <td className="px-4 py-2.5 text-card-foreground">{u.eventTitle}</td>
                     <td className="px-4 py-2.5 capitalize text-muted-foreground">{u.type}</td>
-                    <td className="px-4 py-2.5 text-right font-medium text-foreground">
+                    <td className="px-4 py-2.5 text-right font-medium text-card-foreground">
                       {u.credits}
                     </td>
                   </tr>
@@ -467,7 +469,7 @@ function NotificationsTab({
               {groups.map((g) => (
                 <tr key={g.key}>
                   <td className="px-4 py-3">
-                    <p className="font-medium text-foreground">{g.label}</p>
+                    <p className="font-medium text-card-foreground">{g.label}</p>
                     <p className="text-xs text-muted-foreground">{g.desc}</p>
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -527,7 +529,7 @@ function CardHeader({
         </div>
       )}
       <div>
-        <h2 className="font-display text-lg font-semibold text-foreground">{title}</h2>
+        <h2 className="font-display text-lg font-semibold text-card-foreground">{title}</h2>
         {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
       </div>
     </div>
@@ -538,7 +540,7 @@ function Row({ label, value, verified }: { label: string; value: string; verifie
   return (
     <div className="flex items-center justify-between border-b border-border/60 pb-3">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+      <span className="flex items-center gap-2 text-sm font-medium text-card-foreground">
         {value}
         {verified && (
           <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
