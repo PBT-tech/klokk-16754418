@@ -89,6 +89,7 @@
   --color-organiser-hover-bg: var(--organiser-hover-bg);
   --color-organiser-hover-text: var(--organiser-hover-text);
   --color-sms-save-btn-text: var(--sms-save-btn-text);
+  --color-embed-copy-btn-text: var(--embed-copy-btn-text);
   --font-display: "DynaPuff", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Red Hat Display", ui-sans-serif, system-ui, sans-serif;
   --font-script: "Playwrite VN", ui-serif, Georgia, serif;
@@ -175,6 +176,7 @@
   --organiser-hover-bg: oklch(0.563 0.088 169.6);
   --organiser-hover-text: oklch(0.2915 0.0611 165.08);
   --sms-save-btn-text: oklch(0.563 0.088 169.6);
+  --embed-copy-btn-text: oklch(0.974 0.027 116.1);
 }
 
 .dark {
@@ -257,6 +259,7 @@
   --popular-panel-border: oklch(0.802 0.042 238.2);
   --organiser-hover-bg: oklch(0.563 0.088 169.6);
   --sms-save-btn-text: oklch(0.563 0.088 169.6);
+  --embed-copy-btn-text: oklch(0.974 0.027 116.1);
 }
 
 @layer base {

@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   Bell,
   CreditCard,
-  Globe,
   Mail,
   RefreshCw,
   Shield,
@@ -31,7 +30,6 @@ import {
   useUpdateProfile,
   useDeleteAccount,
   useUpdateNotificationPrefs,
-  useUpdateEmbedSettings,
   useAuthActions,
 } from "@/lib/klokk-hooks";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,7 +49,7 @@ export const Route = createFileRoute("/settings")({
   component: Settings,
 });
 
-type Tab = "account" | "sms" | "embed" | "notifications";
+type Tab = "account" | "sms" | "notifications";
 
 function Settings() {
   const session = useSession();
@@ -74,7 +72,6 @@ function Settings() {
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "account", label: "Account", icon: <Shield className="size-4" /> },
     { id: "sms", label: "SMS credits", icon: <CreditCard className="size-4" /> },
-    { id: "embed", label: "Embed", icon: <Globe className="size-4" /> },
     { id: "notifications", label: "Notifications", icon: <Bell className="size-4" /> },
   ];
 
@@ -82,7 +79,7 @@ function Settings() {
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
       <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">Settings</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Manage your account, SMS credits, embed widget, and notifications.
+        Manage your account, SMS credits, and notifications.
       </p>
 
       <div className="mt-8 flex flex-wrap gap-1 border-b border-border">
@@ -106,7 +103,6 @@ function Settings() {
       <div className="mt-8">
         {tab === "account" && <AccountTab account={account} />}
         {tab === "sms" && <SmsTab account={account} />}
-        {tab === "embed" && <EmbedTab account={account} />}
         {tab === "notifications" && <NotificationsTab account={account} />}
       </div>
     </div>
@@ -272,11 +268,16 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
 
 function SmsTab({ account }: { account: NonNullable<ReturnType<typeof useCurrentAccount>> }) {
   const updateProfile = useUpdateProfile();
+  const isFree = account.plan === "free";
   const [buyOpen, setBuyOpen] = useState(false);
   const [autoTopUp, setAutoTopUp] = useState(account.smsAutoTopUp);
   const [threshold, setThreshold] = useState(account.smsLowBalanceThreshold);
 
   const saveAuto = () => {
+    if (isFree) {
+      toast.error("Auto-top-up requires a paid plan");
+      return;
+    }
     updateProfile.mutate({
       smsAutoTopUp: autoTopUp,
       smsLowBalanceThreshold: threshold,
@@ -320,7 +321,7 @@ function SmsTab({ account }: { account: NonNullable<ReturnType<typeof useCurrent
                 Buy 100 credits when balance falls below your threshold.
               </p>
             </div>
-            <Switch checked={autoTopUp} onCheckedChange={setAutoTopUp} />
+            <Switch checked={autoTopUp} onCheckedChange={setAutoTopUp} disabled={isFree} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Low-balance threshold</Label>
@@ -394,94 +395,6 @@ function SmsTab({ account }: { account: NonNullable<ReturnType<typeof useCurrent
   );
 }
 
-function EmbedTab({ account }: { account: NonNullable<ReturnType<typeof useCurrentAccount>> }) {
-  const updateEmbed = useUpdateEmbedSettings();
-  const [accent, setAccent] = useState(account.embedSettings.accentOverride);
-  const [domains, setDomains] = useState(account.embedSettings.domainAllowlist.join(", "));
-  const [expiry, setExpiry] = useState(account.embedSettings.embedExpiry);
-
-  const save = () => {
-    updateEmbed.mutate({
-      settings: {
-        accentOverride: accent,
-        domainAllowlist: domains
-          .split(",")
-          .map((d) => d.trim())
-          .filter(Boolean),
-        embedExpiry: expiry,
-      },
-    });
-    toast.success("Embed settings saved");
-  };
-
-  const embedCode = `<script src="https://klokk.com/embed.js" data-event="EVENT_TOKEN" data-accent="${accent}"></script>`;
-
-  const copyCode = () => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(embedCode).then(
-        () => toast.success("Embed code copied"),
-        () => toast.error("Couldn't copy"),
-      );
-    }
-  };
-
-  return (
-    <div className="space-y-8">
-      <Card>
-        <CardHeader
-          title="Embed widget"
-          subtitle="Drop the Klokk scheduler onto any external page"
-          icon={<Globe className="size-4" />}
-        />
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Accent colour override</Label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={accent}
-                onChange={(e) => setAccent(e.target.value)}
-                className="size-9 cursor-pointer rounded-lg border border-border bg-transparent"
-              />
-              <Input
-                value={accent}
-                onChange={(e) => setAccent(e.target.value)}
-                className="max-w-xs"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Override the accent colour only. Full white-label is a paid plan.
-            </p>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Domain allowlist (comma-separated)</Label>
-            <Input
-              value={domains}
-              onChange={(e) => setDomains(e.target.value)}
-              placeholder="klokk.com, yoursite.com"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Embed expiry (optional)</Label>
-            <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
-          </div>
-          <Button onClick={save}>Save embed settings</Button>
-        </div>
-      </Card>
-
-      <Card>
-        <CardHeader title="Embed snippet" subtitle="Paste this on your host page" />
-        <pre className="overflow-x-auto rounded-xl border border-border bg-surface/60 p-4 text-xs text-foreground">
-          <code>{embedCode}</code>
-        </pre>
-        <Button variant="outline" onClick={copyCode} className="mt-3">
-          Copy snippet
-        </Button>
-      </Card>
-    </div>
-  );
-}
-
 function NotificationsTab({
   account,
 }: {
@@ -490,7 +403,13 @@ function NotificationsTab({
   const updatePrefs = useUpdateNotificationPrefs();
   const [prefs, setPrefs] = useState<NotificationPrefs>(account.notificationPrefs);
 
+  const isFree = account.plan === "free";
+
   const toggle = (group: keyof NotificationPrefs, channel: "email" | "sms") => {
+    if (channel === "sms" && isFree) {
+      toast.error("SMS notifications require a paid plan");
+      return;
+    }
     const next = {
       ...prefs,
       [group]: { ...prefs[group], [channel]: !prefs[group][channel] },
@@ -538,9 +457,11 @@ function NotificationsTab({
                   </td>
                   <td className="px-4 py-3 text-center">
                     <Switch
-                      checked={prefs[g.key].sms}
+                      checked={isFree ? false : prefs[g.key].sms}
                       onCheckedChange={() => toggle(g.key, "sms")}
+                      disabled={isFree}
                     />
+                    {isFree && <p className="mt-1 text-[10px] text-muted-foreground">Paid plan</p>}
                   </td>
                 </tr>
               ))}

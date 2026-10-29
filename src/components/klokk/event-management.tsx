@@ -43,6 +43,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
   const status = computeStatus(event);
   const link = `${typeof window !== "undefined" ? window.location.origin : ""}/event/${event.token}`;
   const best = bestSlot(event);
+  const embedCode = `<script src="https://klokk.com/embed.js" data-event="${event.token}" data-accent="${account.embedSettings?.accentOverride ?? "#c9a84c"}"></script>`;
 
   const respondedEmails = useMemo(
     () => new Set(event.responses.map((r) => r.email.toLowerCase())),
@@ -53,6 +54,15 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(link).then(
         () => toast.success("Link copied"),
+        () => toast.error("Couldn't copy"),
+      );
+    }
+  };
+
+  const copyEmbed = () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(embedCode).then(
+        () => toast.success("Embed code copied"),
         () => toast.error("Couldn't copy"),
       );
     }
@@ -307,7 +317,27 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
           </section>
 
           <section>
-            <SectionTitle>Danger zone</SectionTitle>
+            <SectionTitle>Embed</SectionTitle>
+            <div className="rounded-xl border border-border bg-card p-3">
+              <p className="mb-3 text-xs text-muted-foreground">
+                Drop the Klokk scheduler onto any external page for this event.
+              </p>
+              <pre className="overflow-x-auto rounded-lg border border-border bg-surface/60 p-3 text-[10px] leading-relaxed text-foreground">
+                <code>{embedCode}</code>
+              </pre>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copyEmbed}
+                className="mt-3 w-full text-embed-copy-btn-text"
+              >
+                <Copy className="size-3.5" />
+                Copy snippet
+              </Button>
+            </div>
+          </section>
+
+          <section>
             <div className="flex flex-wrap gap-2">
               {status !== "confirmed" && (
                 <Button variant="outline" onClick={close}>
