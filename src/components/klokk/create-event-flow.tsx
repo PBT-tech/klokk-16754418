@@ -100,9 +100,9 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <Link
         to="/dashboard"
-        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-surface hover:text-foreground shadow-xs"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-card-foreground shadow-xs transition-colors hover:bg-surface"
       >
-        <ArrowLeft className="size-4 text-foreground" />
+        <ArrowLeft className="size-4 text-card-foreground" />
         Back to dashboard
       </Link>
 
@@ -125,7 +125,7 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
             variant="outline"
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={step === 0}
-            className="border-border bg-background text-foreground hover:bg-surface font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            className="border-border bg-background text-foreground font-semibold hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ArrowLeft className="size-4 text-foreground" />
             Back
@@ -166,7 +166,7 @@ function Stepper({ step }: { step: number }) {
           </span>
           <span
             className={`text-sm ${
-              i === step ? "font-medium text-foreground" : "text-muted-foreground"
+              i === step ? "font-medium text-card-foreground" : "text-muted-foreground"
             }`}
           >
             {label}
@@ -190,7 +190,7 @@ function DetailsStep({
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="title" className="text-sm font-semibold text-foreground">
+        <Label htmlFor="title" className="text-sm font-semibold text-card-foreground">
           Event title <span className="text-accent">*</span>
         </Label>
         <Input
@@ -198,11 +198,11 @@ function DetailsStep({
           placeholder="e.g. Canberra Business Women Lunch"
           value={draft.title}
           onChange={(e) => set("title", e.target.value)}
-          className="bg-card text-foreground border-border placeholder:text-muted-foreground"
+          className="bg-card text-card-foreground border-border placeholder:text-muted-foreground"
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="desc" className="text-sm font-semibold text-foreground">
+        <Label htmlFor="desc" className="text-sm font-semibold text-card-foreground">
           Meeting description / details (optional)
         </Label>
         <Textarea
@@ -211,22 +211,22 @@ function DetailsStep({
           placeholder="What's this meeting about? Add agenda, expectations, or background details."
           value={draft.description}
           onChange={(e) => set("description", e.target.value)}
-          className="bg-card text-foreground border-border placeholder:text-muted-foreground"
+          className="bg-card text-card-foreground border-border placeholder:text-muted-foreground"
         />
         <p className="text-xs text-muted-foreground">
           Share background context, goals, or discussion topics so invitees know what to expect.
         </p>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="loc" className="text-sm font-semibold text-foreground">
+        <Label htmlFor="controlloc" className="text-sm font-semibold text-card-foreground">
           Meeting location or link (optional)
         </Label>
         <Input
-          id="loc"
+          id="controlloc"
           placeholder="e.g. The Ottoman Restaurant, Studio B · 4th Floor, or Zoom link"
           value={draft.location}
           onChange={(e) => set("location", e.target.value)}
-          className="bg-card text-foreground border-border placeholder:text-muted-foreground"
+          className="bg-card text-card-foreground border-border placeholder:text-muted-foreground"
         />
         <p className="text-xs text-muted-foreground">
           Venue name, street address, or video call link (Zoom, Google Meet, Teams).
@@ -246,7 +246,7 @@ function ParticipantsStep({
   return (
     <div className="space-y-6">
       <div>
-        <Label className="mb-3 block">Participation requirement</Label>
+        <Label className="mb-3 block text-card-foreground">Participation requirement</Label>
         <div className="grid gap-3 sm:grid-cols-2">
           <ModeCard
             active={draft.participationMode === "minimum"}
@@ -265,7 +265,9 @@ function ParticipantsStep({
 
       {draft.participationMode === "minimum" ? (
         <div className="space-y-1.5">
-          <Label htmlFor="min">Minimum participants</Label>
+          <Label htmlFor="min" className="text-card-foreground">
+            Minimum participants
+          </Label>
           <Input
             id="min"
             type="number"
@@ -362,7 +364,7 @@ function NamedList({
               <div className="flex items-center gap-3">
                 <Avatar url={p.avatarUrl} firstName={p.firstName} lastName={p.lastName} size={36} />
                 <div>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-sm font-medium text-card-foreground">
                     {p.firstName} {p.lastName}
                   </p>
                   <p className="text-xs text-muted-foreground">{p.email}</p>
@@ -429,7 +431,7 @@ function ModeCard({
       >
         <Users className="size-4" />
       </div>
-      <p className="mt-3 font-medium text-foreground">{title}</p>
+      <p className="mt-3 font-medium text-card-foreground">{title}</p>
       <p className="mt-1 text-sm text-muted-foreground">{body}</p>
     </button>
   );
@@ -445,7 +447,9 @@ function DeadlineStep({
   return (
     <div className="space-y-5">
       <div className="space-y-1.5">
-        <Label htmlFor="deadline">Response deadline</Label>
+        <Label htmlFor="deadline" className="text-card-foreground">
+          Response deadline
+        </Label>
         <Input
           id="deadline"
           type="datetime-local"
@@ -453,6 +457,7 @@ function DeadlineStep({
           onChange={(e) => {
             if (e.target.value) set("deadline", new Date(e.target.value).toISOString());
           }}
+          className="text-card-foreground"
         />
       </div>
       <div className="flex items-start gap-3 rounded-xl border border-border bg-surface/50 p-4">
@@ -470,7 +475,7 @@ function ReviewStep({ draft }: { draft: Draft }) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-display text-lg font-semibold text-foreground">
+        <h3 className="font-display text-lg font-semibold text-card-foreground">
           {draft.title || "Untitled event"}
         </h3>
         {draft.description && (
@@ -485,7 +490,7 @@ function ReviewStep({ draft }: { draft: Draft }) {
           {draft.slots.length === 0 ? (
             <span className="text-sm text-muted-foreground">None</span>
           ) : (
-            <ul className="space-y-1 text-sm text-foreground">
+            <ul className="space-y-1 text-sm text-card-foreground">
               {draft.slots.map((s) => (
                 <li key={s.id}>{toSlotLabel(s.date, s.startTime, s.endTime)}</li>
               ))}
@@ -494,16 +499,16 @@ function ReviewStep({ draft }: { draft: Draft }) {
         </ReviewBlock>
         <ReviewBlock label="Participants">
           {draft.participationMode === "minimum" ? (
-            <p className="text-sm text-foreground">Minimum {draft.minimumCount} responses</p>
+            <p className="text-sm text-card-foreground">Minimum {draft.minimumCount} responses</p>
           ) : (
-            <p className="text-sm text-foreground">
+            <p className="text-sm text-card-foreground">
               {draft.namedParticipants.length} named participants
             </p>
           )}
         </ReviewBlock>
       </div>
       <ReviewBlock label="Deadline">
-        <p className="text-sm text-foreground">{new Date(draft.deadline).toLocaleString()}</p>
+        <p className="text-sm text-card-foreground">{new Date(draft.deadline).toLocaleString()}</p>
       </ReviewBlock>
     </div>
   );
@@ -546,7 +551,9 @@ function CreatedView({ event }: { event: KlokkEvent }) {
       </p>
       <div className="mt-8 flex items-center gap-2 rounded-xl border border-border bg-card p-3 shadow-premium">
         <Link2 className="ml-1 size-4 shrink-0 text-muted-foreground" />
-        <span className="min-w-0 flex-1 truncate text-left text-sm text-foreground">{link}</span>
+        <span className="min-w-0 flex-1 truncate text-left text-sm text-card-foreground">
+          {link}
+        </span>
         <Button size="sm" variant="outline" onClick={copy}>
           <Copy className="size-3.5" />
           Copy

@@ -89,7 +89,7 @@ export function SlotsStep({
     <div className="grid gap-8 lg:grid-cols-2">
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <Label className="text-sm font-semibold text-foreground">Select date range</Label>
+          <Label className="text-sm font-semibold text-card-foreground">Select date range</Label>
           <div className="inline-flex rounded-lg border border-border bg-surface p-0.5 text-xs">
             <button
               type="button"
@@ -97,10 +97,10 @@ export function SlotsStep({
               className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
                 mode === "range"
                   ? "bg-primary text-primary-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-card-foreground"
               }`}
             >
-              Start & end range
+              Start &amp; end range
             </button>
             <button
               type="button"
@@ -108,7 +108,7 @@ export function SlotsStep({
               className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
                 mode === "single"
                   ? "bg-primary text-primary-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-card-foreground"
               }`}
             >
               Single date
@@ -135,7 +135,7 @@ export function SlotsStep({
               />
               <label
                 htmlFor="skip-weekends"
-                className="cursor-pointer text-xs font-medium text-foreground select-none"
+                className="cursor-pointer text-xs font-medium text-card-foreground select-none"
               >
                 Exclude Saturdays and Sundays
               </label>
@@ -152,21 +152,21 @@ export function SlotsStep({
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-foreground">Start time</Label>
+            <Label className="text-xs font-semibold text-card-foreground">Start time</Label>
             <Input
               type="time"
               value={start}
               onChange={(e) => setStart(e.target.value)}
-              className="bg-card text-foreground border-border"
+              className="bg-card text-card-foreground border-border"
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-foreground">End time</Label>
+            <Label className="text-xs font-semibold text-card-foreground">End time</Label>
             <Input
               type="time"
               value={end}
               onChange={(e) => setEnd(e.target.value)}
-              className="bg-card text-foreground border-border"
+              className="bg-card text-card-foreground border-border"
             />
           </div>
         </div>
@@ -187,7 +187,7 @@ export function SlotsStep({
 
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <Label className="text-sm font-semibold text-foreground">
+          <Label className="text-sm font-semibold text-card-foreground">
             Candidate time slots ({draft.slots.length})
           </Label>
           {draft.slots.length > 0 && (
@@ -202,8 +202,8 @@ export function SlotsStep({
         </div>
         {draft.slots.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-surface/40 p-8 text-center text-sm text-muted-foreground">
-            Select a start & end date range and a time window, then click add to generate candidate
-            slots.
+            Select a start &amp; end date range and a time window, then click add to generate
+            candidate slots.
           </div>
         ) : (
           <ul className="max-h-[380px] space-y-2 overflow-y-auto pr-1">
@@ -212,7 +212,7 @@ export function SlotsStep({
                 key={s.id}
                 className="flex items-center justify-between rounded-xl border border-border bg-background px-4 py-2.5 shadow-xs"
               >
-                <span className="text-sm font-medium text-foreground">
+                <span className="text-sm font-medium text-card-foreground">
                   {toSlotLabel(s.date, s.startTime, s.endTime)}
                 </span>
                 <button
