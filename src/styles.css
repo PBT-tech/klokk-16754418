@@ -94,6 +94,7 @@
   --color-pw-fair: var(--pw-fair);
   --color-pw-good: var(--pw-good);
   --color-pw-strong: var(--pw-strong);
+  --color-main-bg: var(--main-bg);
   --font-display: "DynaPuff", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Red Hat Display", ui-sans-serif, system-ui, sans-serif;
   --font-script: "Playwrite VN", ui-serif, Georgia, serif;
@@ -101,6 +102,8 @@
 
 :root {
   --radius: 0.75rem;
+  /* Page shell — light blue in light mode (matches the #eff4f8 the site uses) */
+  --main-bg: oklch(0.9645 0.0044 215.4);
   /* Background 2 — warm off-white (lightest) */
   --background: oklch(0.9955 0.0039 115.49);
   --foreground: oklch(0.2915 0.0611 165.08);
@@ -191,6 +194,7 @@
 .dark {
   /* Background — deep green anchor (the primary colour) */
   --background: oklch(0.2915 0.0611 165.08);
+  --main-bg: oklch(0.2915 0.0611 165.08);
   --foreground: oklch(0.9955 0.0039 115.49);
   /* Card / box — warm off-white (the light background colour) */
   --card: oklch(0.9955 0.0039 115.49);
