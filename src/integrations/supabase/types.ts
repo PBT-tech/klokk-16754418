@@ -10,11 +10,282 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          author_email: string | null
+          author_name: string
+          created_at: string | null
+          event_id: string
+          id: string
+          is_organiser: boolean | null
+          pinned: boolean | null
+          text: string
+        }
+        Insert: {
+          author_email?: string | null
+          author_name: string
+          created_at?: string | null
+          event_id: string
+          id?: string
+          is_organiser?: boolean | null
+          pinned?: boolean | null
+          text: string
+        }
+        Update: {
+          author_email?: string | null
+          author_name?: string
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          is_organiser?: boolean | null
+          pinned?: boolean | null
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          closed_at: string | null
+          confirmed_at: string | null
+          confirmed_slot_id: string | null
+          created_at: string | null
+          deadline: string
+          description: string | null
+          id: string
+          location: string | null
+          minimum_count: number | null
+          owner_id: string
+          participation_mode: string
+          status: string
+          title: string
+          token: string
+        }
+        Insert: {
+          closed_at?: string | null
+          confirmed_at?: string | null
+          confirmed_slot_id?: string | null
+          created_at?: string | null
+          deadline: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          minimum_count?: number | null
+          owner_id: string
+          participation_mode: string
+          status?: string
+          title: string
+          token: string
+        }
+        Update: {
+          closed_at?: string | null
+          confirmed_at?: string | null
+          confirmed_slot_id?: string | null
+          created_at?: string | null
+          deadline?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          minimum_count?: number | null
+          owner_id?: string
+          participation_mode?: string
+          status?: string
+          title?: string
+          token?: string
+        }
+        Relationships: []
+      }
+      named_participants: {
+        Row: {
+          email: string
+          event_id: string
+          first_name: string
+          id: string
+          last_name: string
+        }
+        Insert: {
+          email: string
+          event_id: string
+          first_name: string
+          id: string
+          last_name: string
+        }
+        Update: {
+          email?: string
+          event_id?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "named_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      participant_responses: {
+        Row: {
+          email: string
+          event_id: string
+          first_name: string
+          id: string
+          last_name: string
+          slot_ids: string[] | null
+          submitted_at: string | null
+        }
+        Insert: {
+          email: string
+          event_id: string
+          first_name: string
+          id?: string
+          last_name: string
+          slot_ids?: string[] | null
+          submitted_at?: string | null
+        }
+        Update: {
+          email?: string
+          event_id?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          slot_ids?: string[] | null
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_responses_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          email_verified: boolean | null
+          embed_settings: Json | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          notification_prefs: Json | null
+          plan: string | null
+          sms_auto_top_up: boolean | null
+          sms_credits: number | null
+          sms_low_balance_threshold: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          email_verified?: boolean | null
+          embed_settings?: Json | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          notification_prefs?: Json | null
+          plan?: string | null
+          sms_auto_top_up?: boolean | null
+          sms_credits?: number | null
+          sms_low_balance_threshold?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          email_verified?: boolean | null
+          embed_settings?: Json | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          notification_prefs?: Json | null
+          plan?: string | null
+          sms_auto_top_up?: boolean | null
+          sms_credits?: number | null
+          sms_low_balance_threshold?: number | null
+        }
+        Relationships: []
+      }
+      sms_usage: {
+        Row: {
+          credits: number
+          date: string | null
+          event_id: string | null
+          event_title: string | null
+          id: string
+          recipient: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          credits: number
+          date?: string | null
+          event_id?: string | null
+          event_title?: string | null
+          id?: string
+          recipient: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          credits?: number
+          date?: string | null
+          event_id?: string | null
+          event_title?: string | null
+          id?: string
+          recipient?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      time_slots: {
+        Row: {
+          date: string
+          end_time: string
+          event_id: string
+          id: string
+          start_time: string
+        }
+        Insert: {
+          date: string
+          end_time: string
+          event_id: string
+          id: string
+          start_time: string
+        }
+        Update: {
+          date?: string
+          end_time?: string
+          event_id?: string
+          id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_slots_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
