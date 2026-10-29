@@ -84,15 +84,19 @@ function postEvent(
     formLabels[key] = field.label;
   }
 
+  const pageUrl =
+    typeof window !== "undefined" ? window.location.href : "https://klokk.vibepreview.app";
+
   const eventPayload = {
     type: "external_form_submission",
     timestamp: Date.now(),
     formId: FORM_IDS[type],
     formData,
     formLabels,
-    url: "",
+    pageUrl,
+    url: pageUrl,
     title: FORM_NAMES[type],
-    path: "",
+    path: typeof window !== "undefined" ? window.location.pathname : "",
     userAgent: "klokk-server",
     trackingId: TRACKING_ID,
     locationId: LOCATION_ID,

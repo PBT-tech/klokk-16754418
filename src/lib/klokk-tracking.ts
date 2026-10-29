@@ -93,13 +93,15 @@ export function buildTrackingPayload(
   formData: Record<string, unknown>,
   formLabels: Record<string, string>,
 ) {
+  const pageUrl = typeof window !== "undefined" ? window.location.href : "";
   return {
     type: "external_form_submission",
     timestamp: Date.now(),
     formId,
     formData,
     formLabels,
-    url: typeof window !== "undefined" ? window.location.href : "",
+    pageUrl,
+    url: pageUrl,
     title: typeof document !== "undefined" ? document.title : "",
     path: typeof window !== "undefined" ? window.location.pathname : "",
     userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
