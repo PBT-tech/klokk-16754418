@@ -98,7 +98,8 @@ function SignUp() {
     }
 
     // Fire the CRM form-tracking event so a contact is created in the
-    // sub-account. Fire-and-forget — never blocks the UX.
+    // sub-account, tagged with the account level. Fire-and-forget — never
+    // blocks the UX.
     try {
       const trackingPayload = buildTrackingPayload(
         "klokk-signup",
@@ -114,7 +115,11 @@ function SignUp() {
           email: "Email",
         },
       );
-      postTrackingEvent(trackingPayload);
+      postTrackingEvent(trackingPayload, {
+        customFields: {
+          HW6sdINihzHa9KowrSTE: { value: "free", label: "Account Level" },
+        },
+      });
     } catch {
       /* best-effort */
     }
