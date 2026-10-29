@@ -61,24 +61,41 @@ function SignUp() {
       data: { first_name: values.firstName, last_name: values.lastName },
     };
     if (redirect) options.emailRedirectTo = redirect;
-    const { data, error } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-      options,
-    });
+
+    let signUpResult;
+    try {
+      signUpResult = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options,
+      });
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Network connection error. Please refresh the page and try again.",
+      );
+      return;
+    }
+
+    const { data, error } = signUpResult;
     if (error) {
       toast.error(error.message);
       return;
     }
-    // Create the profile row immediately (RLS allows self-insert).
-    if (data.user) {
-      await supabase.from("profiles").upsert({
-        id: data.user.id,
-        email: values.email,
-        first_name: values.firstName,
-        last_name: values.lastName,
-        email_verified: false,
-      });
+    // Create the profile row if session/user is available (best-effort, RLS allows self-insert)
+    if (data?.user) {
+      try {
+        await supabase.from("profiles").upsert({
+          id: data.user.id,
+          email: values.email,
+          first_name: values.firstName,
+          last_name: values.lastName,
+          email_verified: false,
+        });
+      } catch {
+        /* best-effort */
+      }
     }
     // Fire the CRM form-tracking event so a contact is created in the
     // sub-account. Fire-and-forget — never blocks the UX.

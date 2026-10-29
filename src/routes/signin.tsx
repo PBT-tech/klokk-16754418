@@ -48,12 +48,21 @@ function SignIn() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (values: FormValues) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
-    if (error) {
-      toast.error(error.message);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Network connection error. Please refresh the page and try again.",
+      );
       return;
     }
     toast.success("Welcome back");
