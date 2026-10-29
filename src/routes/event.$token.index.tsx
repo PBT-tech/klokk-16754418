@@ -191,11 +191,11 @@ function ParticipantResponse() {
         <span className="text-xs text-muted-foreground">klokk.com</span>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-premium sm:p-8">
+      <div className="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-premium sm:p-8">
         <p className="text-xs font-medium uppercase tracking-wide text-accent">
           {event.participationMode === "named" ? "You're invited" : "Share your availability"}
         </p>
-        <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-foreground">
+        <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-card-foreground">
           {event.title}
         </h1>
         {event.description && (
@@ -214,7 +214,7 @@ function ParticipantResponse() {
         {submitted ? (
           <div className="mt-8 rounded-xl border border-primary/30 bg-primary/5 p-6 text-center">
             <CheckCircle2 className="mx-auto size-8 text-primary" />
-            <p className="mt-3 font-medium text-foreground">
+            <p className="mt-3 font-medium text-card-foreground">
               Thanks — we've got your availability.
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -229,6 +229,7 @@ function ParticipantResponse() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="First name"
+                  className="bg-card text-card-foreground border-border placeholder:text-muted-foreground"
                 />
               </Field>
               <Field label="Last name">
@@ -236,6 +237,7 @@ function ParticipantResponse() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Last name"
+                  className="bg-card text-card-foreground border-border placeholder:text-muted-foreground"
                 />
               </Field>
             </div>
@@ -245,6 +247,7 @@ function ParticipantResponse() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
+                className="bg-card text-card-foreground border-border placeholder:text-muted-foreground"
               />
               {prior && (
                 <p className="mt-1.5 text-xs text-muted-foreground">
@@ -255,7 +258,7 @@ function ParticipantResponse() {
             </Field>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">
+              <Label className="text-xs font-semibold text-card-foreground">
                 Profile photo (optional)
               </Label>
               <AvatarUpload
@@ -271,7 +274,9 @@ function ParticipantResponse() {
             </div>
 
             <div>
-              <Label className="mb-3 block">When can you make it?</Label>
+              <Label className="mb-3 block text-sm font-semibold text-card-foreground">
+                When can you make it?
+              </Label>
               {event.slots.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No time slots have been defined for this event.
@@ -286,10 +291,10 @@ function ParticipantResponse() {
                         key={s.id}
                         type="button"
                         onClick={() => toggle(s.id)}
-                        className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition-all ${
+                        className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all ${
                           on
-                            ? "border-primary/50 bg-primary/10 text-foreground shadow-glow"
-                            : "border-border bg-background text-foreground hover:border-primary/30"
+                            ? "border-primary/50 bg-primary/10 text-card-foreground shadow-glow"
+                            : "border-border bg-background text-card-foreground hover:border-primary/30"
                         }`}
                       >
                         <span>
@@ -317,7 +322,7 @@ function ParticipantResponse() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="notes" className="text-xs font-semibold text-foreground">
+              <Label htmlFor="notes" className="text-xs font-semibold text-card-foreground">
                 Add notes or dietary requirements (optional)
               </Label>
               <textarea
@@ -326,7 +331,7 @@ function ParticipantResponse() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. Can do Tuesday if by 3pm, vegetarian, or prefer online"
-                className="flex w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex min-h-[80px] w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-card-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
               <p className="text-xs text-muted-foreground">
                 Organisers see any notes alongside your chosen dates and times.
@@ -352,7 +357,7 @@ function ParticipantResponse() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
+      <Label className="text-xs font-semibold text-card-foreground">{label}</Label>
       {children}
     </div>
   );
