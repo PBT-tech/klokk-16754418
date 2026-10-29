@@ -199,10 +199,10 @@ function ParticipantResponse() {
           {event.title}
         </h1>
         {event.description && (
-          <p className="mt-2 text-sm text-muted-foreground">{event.description}</p>
+          <p className="mt-2 text-sm text-card-foreground/80">{event.description}</p>
         )}
         {event.location && (
-          <p className="mt-2 text-sm text-muted-foreground">📍 {event.location}</p>
+          <p className="mt-2 text-sm text-card-foreground/80">📍 {event.location}</p>
         )}
         <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
