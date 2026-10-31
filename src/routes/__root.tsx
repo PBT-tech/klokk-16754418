@@ -14,6 +14,7 @@ import { reportVibeError } from "../lib/vibe-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader, SiteFooter } from "@/components/klokk/site-chrome";
 import { useEnsureSeeded } from "@/lib/klokk-hooks";
+import { ChatWidget } from "@/components/klokk/chat-widget";
 
 function NotFoundComponent() {
   return (
@@ -153,6 +154,7 @@ function RootComponent() {
         <SiteFooter />
       </div>
       <Toaster position="bottom-right" richColors />
+      <ChatWidget />
     </QueryClientProvider>
   );
 }
