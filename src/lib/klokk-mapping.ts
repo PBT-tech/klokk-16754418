@@ -34,6 +34,7 @@ export function mapResponse(r: any): ParticipantResponse {
     firstName: r.first_name,
     lastName: r.last_name,
     email: r.email,
+    phone: r.phone ?? undefined,
     slotIds: r.slot_ids ?? [],
     notes: r.notes ?? undefined,
     avatarUrl: r.avatar_url ?? undefined,
@@ -70,6 +71,15 @@ export function mapEvent(row: any): KlokkEvent {
     chat: (row.chat_messages ?? []).map(mapChat),
     status: row.status,
     confirmedSlotId: row.confirmed_slot_id ?? undefined,
+    ...(row.confirmed_custom_date && row.confirmed_custom_start && row.confirmed_custom_end
+      ? {
+          confirmedCustom: {
+            date: row.confirmed_custom_date,
+            startTime: row.confirmed_custom_start,
+            endTime: row.confirmed_custom_end,
+          },
+        }
+      : {}),
     confirmedAt: row.confirmed_at ?? undefined,
     createdAt: row.created_at,
     closedAt: row.closed_at ?? undefined,

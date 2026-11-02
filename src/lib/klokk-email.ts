@@ -4,9 +4,7 @@
 //
 // Custom field IDs (registered via the form-tracking integration):
 import type { KlokkEvent } from "./klokk-types";
-import { toSlotLabel } from "./klokk-format";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { confirmedTimeLabel } from "./klokk-format";
 
 const ENDPOINT = "https://backend.leadconnectorhq.com/external-tracking/events";
 const TRACKING_ID = "tk_9fa1b07fdc4a47ce8e0d2f1b7bdba934";
@@ -66,7 +64,7 @@ function postEvent(
   type: NotificationType,
   payload: BasePayload,
   customFields: Record<string, { value: unknown; label: string }>,
-) {
+): Promise<boolean> {
   const formData: Record<string, unknown> = {
     first_name: payload.recipientFirstName,
     last_name: payload.recipientLastName,
@@ -113,11 +111,15 @@ function postEvent(
   const body = new FormData();
   body.append("event", JSON.stringify(eventPayload));
 
-  fetch(ENDPOINT, {
+  // Returned (not fire-and-forget) so serverless callers can await it before the
+  // function ends; otherwise the platform may drop the request.
+  return fetch(ENDPOINT, {
     method: "POST",
     headers: { version: "2021-07-28" },
     body,
-  }).catch(() => {});
+  })
+    .then((res) => res.ok)
+    .catch(() => false);
 }
 
 function eventLink(origin: string, token: string) {
@@ -145,24 +147,27 @@ function eventCustomFields(
 
 /** F7: invitation email to a participant (contains the unique link). */
 export function sendInvitation(p: EventPayload) {
-  postEvent("invitation", p, eventCustomFields(p.event, p.organiserName, p.origin));
+  return postEvent("invitation", p, eventCustomFields(p.event, p.organiserName, p.origin));
 }
 
 /** F4/F7: submission confirmation email to the participant who just submitted. */
 export function sendSubmissionConfirmation(p: EventPayload) {
-  postEvent("submission_confirmation", p, eventCustomFields(p.event, p.organiserName, p.origin));
+  return postEvent(
+    "submission_confirmation",
+    p,
+    eventCustomFields(p.event, p.organiserName, p.origin),
+  );
 }
 
 /** F7: reminder to an outstanding named participant. */
 export function sendReminder(p: EventPayload) {
-  postEvent("reminder", p, eventCustomFields(p.event, p.organiserName, p.origin));
+  return postEvent("reminder", p, eventCustomFields(p.event, p.organiserName, p.origin));
 }
 
 /** F6/F7: final meeting confirmation to all participants who responded. */
 export function sendMeetingConfirmation(p: EventPayload) {
-  const slot = p.event.slots.find((s) => s.id === p.event.confirmedSlotId);
-  const confirmedTime = slot ? toSlotLabel(slot.date, slot.startTime, slot.endTime) : "";
-  postEvent(
+  const confirmedTime = confirmedTimeLabel(p.event);
+  return postEvent(
     "meeting_confirmation",
     p,
     eventCustomFields(p.event, p.organiserName, p.origin, {
@@ -173,7 +178,7 @@ export function sendMeetingConfirmation(p: EventPayload) {
 
 /** F9: cancellation notice to participants. */
 export function sendCancellation(p: EventPayload) {
-  postEvent("event_cancelled", p, eventCustomFields(p.event, p.organiserName, p.origin));
+  return postEvent("event_cancelled", p, eventCustomFields(p.event, p.organiserName, p.origin));
 }
 
 /** Notify the sub-account owner that a new organiser signed up.
@@ -181,7 +186,7 @@ export function sendCancellation(p: EventPayload) {
  *  handles the owner-facing notification email. */
 export function sendSignupNotification(p: { newOrganiserEmail: string; newOrganiserName: string }) {
   const [first = "", ...rest] = p.newOrganiserName.split(" ");
-  postEvent(
+  return postEvent(
     "signup_notification",
     {
       recipientEmail: p.newOrganiserEmail,

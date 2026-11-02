@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/klokk/status-badge";
 import { AvailabilityHeatMap, bestSlot } from "@/components/klokk/heat-map";
 import { EventChat } from "@/components/klokk/event-chat";
+import { EmbedPanel } from "@/components/klokk/embed-panel";
 import { Avatar } from "@/components/klokk/avatar";
 import {
   useUpdateEvent,
@@ -30,7 +31,15 @@ import {
   useSendInvitations,
 } from "@/lib/klokk-hooks";
 import { computeStatus } from "@/lib/klokk-store";
-import { formatDate, formatDateTime, relativeDeadline, toSlotLabel } from "@/lib/klokk-format";
+import { participantWarning } from "@/lib/klokk-warnings";
+import { LimitBanner } from "@/components/klokk/limit-banner";
+import {
+  confirmedTimeLabel,
+  formatDate,
+  formatDateTime,
+  relativeDeadline,
+  toSlotLabel,
+} from "@/lib/klokk-format";
 import type { KlokkAccount, KlokkEvent } from "@/lib/klokk-types";
 
 export function EventManagement({ event, account }: { event: KlokkEvent; account: KlokkAccount }) {
@@ -41,10 +50,14 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
   const sendInvitations = useSendInvitations();
   const [confirmSlotId, setConfirmSlotId] = useState<string | undefined>(event.confirmedSlotId);
   const [showChat, setShowChat] = useState(false);
+  const [useCustom, setUseCustom] = useState(false);
+  const [customDate, setCustomDate] = useState("");
+  const [customStart, setCustomStart] = useState("09:00");
+  const [customEnd, setCustomEnd] = useState("10:00");
   const status = computeStatus(event);
   const link = `${typeof window !== "undefined" ? window.location.origin : ""}/event/${event.token}`;
   const best = bestSlot(event);
-  const embedCode = `<script src="https://klokk.com/embed.js" data-event="${event.token}" data-accent="${account.embedSettings?.accentOverride ?? "#c9a84c"}"></script>`;
+  const warning = participantWarning(account.plan, event.responses.length, event.title);
 
   const respondedEmails = useMemo(
     () => new Set(event.responses.map((r) => r.email.toLowerCase())),
@@ -60,17 +73,17 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
     }
   };
 
-  const copyEmbed = () => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(embedCode).then(
-        () => toast.success("Embed code copied"),
-        () => toast.error("Couldn't copy"),
-      );
-    }
-  };
-
   const confirm = () => {
-    if (!confirmSlotId) {
+    if (useCustom) {
+      if (!customDate || !customStart || !customEnd) {
+        toast.error("Enter a date, start and end time");
+        return;
+      }
+      if (customEnd <= customStart) {
+        toast.error("The end time must be after the start time");
+        return;
+      }
+    } else if (!confirmSlotId) {
       toast.error("Pick a time to confirm");
       return;
     }
@@ -78,7 +91,10 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
       {
         id: event.id,
         status: "confirmed",
-        confirmedSlotId: confirmSlotId,
+        confirmedSlotId: useCustom ? null : confirmSlotId,
+        confirmedCustomDate: useCustom ? customDate : null,
+        confirmedCustomStart: useCustom ? customStart : null,
+        confirmedCustomEnd: useCustom ? customEnd : null,
         confirmedAt: new Date().toISOString(),
       },
       {
@@ -245,6 +261,8 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
         </div>
       )}
 
+      {warning && <LimitBanner warning={warning} />}
+
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <section>
           <SectionTitle>Availability</SectionTitle>
@@ -261,10 +279,56 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
                 selectedSlotId={confirmSlotId}
                 onSelect={setConfirmSlotId}
               />
+              <div className="mt-6 rounded-xl border border-border/70 bg-card p-4">
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-card-foreground">
+                  <input
+                    type="checkbox"
+                    checked={useCustom}
+                    onChange={(e) => setUseCustom(e.target.checked)}
+                    className="size-4 accent-[var(--color-primary)]"
+                  />
+                  Use a different time (not one of the proposed slots)
+                </label>
+                {useCustom && (
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                    <label className="text-xs font-semibold text-card-foreground">
+                      Date
+                      <input
+                        type="date"
+                        value={customDate}
+                        onChange={(e) => setCustomDate(e.target.value)}
+                        className="mt-1 flex h-9 w-full rounded-md border border-border bg-card px-3 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs font-semibold text-card-foreground">
+                      Start
+                      <input
+                        type="time"
+                        value={customStart}
+                        onChange={(e) => setCustomStart(e.target.value)}
+                        className="mt-1 flex h-9 w-full rounded-md border border-border bg-card px-3 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs font-semibold text-card-foreground">
+                      End
+                      <input
+                        type="time"
+                        value={customEnd}
+                        onChange={(e) => setCustomEnd(e.target.value)}
+                        className="mt-1 flex h-9 w-full rounded-md border border-border bg-card px-3 text-sm"
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
               <div className="mt-6 flex flex-wrap gap-2">
-                <Button onClick={confirm} disabled={!confirmSlotId} className="shadow-premium">
+                <Button
+                  onClick={confirm}
+                  disabled={useCustom ? !customDate : !confirmSlotId}
+                  className="shadow-premium"
+                >
                   <Check className="size-4" />
-                  Confirm {confirmSlotId ? "selected time" : ""}
+                  Confirm {useCustom ? "custom time" : confirmSlotId ? "selected time" : ""}
                 </Button>
                 <Button variant="outline" onClick={extend}>
                   <Clock className="size-4" />
@@ -319,23 +383,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
 
           <section>
             <SectionTitle>Embed</SectionTitle>
-            <div className="rounded-xl border border-border bg-card p-3">
-              <p className="mb-3 text-xs text-muted-foreground">
-                Drop the Klokk scheduler onto any external page for this event.
-              </p>
-              <pre className="overflow-x-auto rounded-lg border border-border bg-surface/60 p-3 text-[10px] leading-relaxed text-foreground">
-                <code>{embedCode}</code>
-              </pre>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={copyEmbed}
-                className="mt-3 w-full text-embed-copy-btn-text"
-              >
-                <Copy className="size-3.5" />
-                Copy snippet
-              </Button>
-            </div>
+            <EmbedPanel event={event} account={account} />
           </section>
 
           <section>
@@ -362,18 +410,14 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
 }
 
 function ConfirmedView({ event }: { event: KlokkEvent }) {
-  const slot = event.slots.find((s) => s.id === event.confirmedSlotId);
+  const label = confirmedTimeLabel(event);
   return (
     <div className="rounded-2xl border border-primary/30 bg-primary/5 p-6 shadow-glow">
       <div className="flex items-center gap-2 text-primary">
         <CheckCircle2 className="size-5" />
         <span className="font-medium">Meeting confirmed</span>
       </div>
-      {slot && (
-        <p className="mt-3 font-display text-xl font-semibold text-foreground">
-          {toSlotLabel(slot.date, slot.startTime, slot.endTime)}
-        </p>
-      )}
+      {label && <p className="mt-3 font-display text-xl font-semibold text-foreground">{label}</p>}
       {event.confirmedAt && (
         <p className="mt-1 text-sm text-muted-foreground">
           Confirmed {formatDateTime(event.confirmedAt)}
@@ -495,6 +539,13 @@ function OpenList({ event }: { event: KlokkEvent }) {
                 {r.firstName} {r.lastName}
               </p>
               <p className="truncate text-xs text-muted-foreground">{r.email}</p>
+              {r.phone && (
+                <p className="truncate text-xs text-muted-foreground">
+                  <a href={`tel:${r.phone.replace(/[^+\d]/g, "")}`} className="hover:underline">
+                    {r.phone}
+                  </a>
+                </p>
+              )}
               {r.notes && (
                 <p className="mt-1 text-xs italic text-accent bg-surface/60 rounded px-2 py-1 border border-border/50">
                   "{r.notes}"

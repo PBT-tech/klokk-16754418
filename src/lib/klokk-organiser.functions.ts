@@ -7,6 +7,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { mapEvent, mapProfile } from "./klokk-mapping";
 import { makeToken } from "./klokk-store";
+import { participantCapForPlan } from "./klokk-limits";
+import { eventsWarning } from "./klokk-warnings";
 import {
   sendMeetingConfirmation,
   sendCancellation,
@@ -19,7 +21,7 @@ const EVENT_SELECT = `
   *,
   time_slots ( id, date, start_time, end_time ),
   named_participants ( id, first_name, last_name, email, avatar_url ),
-  participant_responses ( id, first_name, last_name, email, slot_ids, notes, avatar_url, submitted_at ),
+  participant_responses ( id, first_name, last_name, email, phone, slot_ids, notes, avatar_url, submitted_at ),
   chat_messages ( id, author_name, author_email, is_organiser, text, pinned, created_at )
 `;
 
@@ -34,6 +36,13 @@ function mapChat(r: any): ChatMessage {
     createdAt: r.created_at,
   };
 }
+
+const channelSchema = z.object({ email: z.boolean(), sms: z.boolean() });
+const notifPrefsSchema = z.object({
+  eventUpdates: channelSchema,
+  reminders: channelSchema,
+  chatMessages: channelSchema,
+});
 
 // ---------- profile ----------
 
@@ -56,8 +65,8 @@ export const getMyProfile = createServerFn({ method: "GET" })
         .insert({
           id: userId,
           email,
-          first_name: "",
-          last_name: "",
+          first_name: String(user?.user?.user_metadata?.["first_name"] ?? "").slice(0, 100),
+          last_name: String(user?.user?.user_metadata?.["last_name"] ?? "").slice(0, 100),
           email_verified: !!user?.user?.email_confirmed_at,
         })
         .select("*")
@@ -78,30 +87,24 @@ export const updateMyProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(
     z.object({
-      email: z.string().optional(),
       firstName: z.string().optional(),
       lastName: z.string().optional(),
       avatarUrl: z.string().nullable().optional(),
-      smsCredits: z.number().optional(),
       smsAutoTopUp: z.boolean().optional(),
       smsLowBalanceThreshold: z.number().optional(),
-      notificationPrefs: z.any().optional(),
-      embedSettings: z.any().optional(),
+      notificationPrefs: notifPrefsSchema.optional(),
     }),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const patch: Record<string, unknown> = {};
-    if (data.email !== undefined) patch["email"] = data.email;
     if (data.firstName !== undefined) patch["first_name"] = data.firstName;
     if (data.lastName !== undefined) patch["last_name"] = data.lastName;
     if (data.avatarUrl !== undefined) patch["avatar_url"] = data.avatarUrl;
-    if (data.smsCredits !== undefined) patch["sms_credits"] = data.smsCredits;
     if (data.smsAutoTopUp !== undefined) patch["sms_auto_top_up"] = data.smsAutoTopUp;
     if (data.smsLowBalanceThreshold !== undefined)
       patch["sms_low_balance_threshold"] = data.smsLowBalanceThreshold;
     if (data.notificationPrefs !== undefined) patch["notification_prefs"] = data.notificationPrefs;
-    if (data.embedSettings !== undefined) patch["embed_settings"] = data.embedSettings;
     const { error } = await supabase
       .from("profiles")
       .update(patch as any)
@@ -142,35 +145,51 @@ export const getMyEvent = createServerFn({ method: "GET" })
   });
 
 const slotSchema = z.object({
-  id: z.string(),
-  date: z.string(),
-  startTime: z.string(),
-  endTime: z.string(),
+  id: z.string().max(64),
+  date: z.string().max(10),
+  startTime: z.string().max(5),
+  endTime: z.string().max(5),
 });
 const namedSchema = z.object({
-  id: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email(),
-  avatarUrl: z.string().optional(),
+  id: z.string().max(64),
+  firstName: z.string().max(100),
+  lastName: z.string().max(100),
+  email: z.string().email().max(254),
+  avatarUrl: z.string().max(2000).startsWith("https://").optional(),
 });
 
 export const createMyEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(
     z.object({
-      title: z.string().min(1),
-      description: z.string().optional(),
-      location: z.string().optional(),
+      title: z.string().min(1).max(200),
+      description: z.string().max(2000).optional(),
+      location: z.string().max(300).optional(),
       participationMode: z.enum(["minimum", "named"]),
-      minimumCount: z.number().optional(),
-      deadline: z.string(),
-      slots: z.array(slotSchema),
-      namedParticipants: z.array(namedSchema),
+      minimumCount: z.number().int().min(1).max(10000).optional(),
+      deadline: z.string().max(40),
+      slots: z.array(slotSchema).max(200),
+      namedParticipants: z.array(namedSchema).max(200),
     }),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    // Server-side plan check (the database trigger enforces the same limits).
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("plan, email_verified")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!prof?.email_verified) {
+      throw new Error("Please verify your email address before creating an event.");
+    }
+    const cap = participantCapForPlan(prof.plan);
+    if (cap !== null && data.namedParticipants.length > cap) {
+      throw new Error(`Your plan allows up to ${cap} participants per event.`);
+    }
+    if (cap !== null && data.participationMode === "minimum" && (data.minimumCount ?? 1) > cap) {
+      throw new Error(`Your plan allows up to ${cap} participants per event.`);
+    }
     const token = makeToken();
     const { data: event, error } = await supabase
       .from("events")
@@ -224,6 +243,27 @@ export const createMyEvent = createServerFn({ method: "POST" })
       .eq("id", eventId)
       .single();
 
+    // Email a heads-up when the free event allowance is nearly or fully used.
+    try {
+      const { data: after } = await (supabase as any)
+        .from("profiles")
+        .select("plan, events_created")
+        .eq("id", userId)
+        .maybeSingle();
+      const warning = eventsWarning({
+        plan: after?.plan ?? "free",
+        eventsCreated: after?.events_created ?? 0,
+        creditsLeft: 99,
+        nextExpiry: null,
+      });
+      if (warning && after?.plan === "free") {
+        const { maybeSendWarning } = await import("./klokk-notify.server");
+        await maybeSendWarning({ userId, warning, period: String(after.events_created) });
+      }
+    } catch {
+      /* warnings are best-effort */
+    }
+
     // F3: send invitation emails to named participants on creation.
     if (data.participationMode === "named" && data.namedParticipants.length > 0) {
       try {
@@ -237,9 +277,9 @@ export const createMyEvent = createServerFn({ method: "POST" })
           owner && (owner.first_name || owner.last_name)
             ? `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim()
             : "Your organiser";
-        const origin = typeof window !== "undefined" ? window.location.origin : "https://klokk.com";
+        const origin = await (await import("./klokk-origin.server")).appOrigin();
         for (const p of mapped.namedParticipants) {
-          sendInvitation({
+          await sendInvitation({
             recipientEmail: p.email,
             recipientFirstName: p.firstName,
             recipientLastName: p.lastName,
@@ -272,6 +312,9 @@ export const updateMyEvent = createServerFn({ method: "POST" })
         ])
         .optional(),
       confirmedSlotId: z.string().nullable().optional(),
+      confirmedCustomDate: z.string().nullable().optional(),
+      confirmedCustomStart: z.string().nullable().optional(),
+      confirmedCustomEnd: z.string().nullable().optional(),
       confirmedAt: z.string().nullable().optional(),
       deadline: z.string().optional(),
       closedAt: z.string().nullable().optional(),
@@ -279,11 +322,38 @@ export const updateMyEvent = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { data: before } = await supabase
+      .from("events")
+      .select("status")
+      .eq("id", data.id)
+      .eq("owner_id", userId)
+      .maybeSingle();
     const patch: Record<string, unknown> = {};
     if (data.status !== undefined) patch["status"] = data.status;
     if (data.confirmedSlotId !== undefined) patch["confirmed_slot_id"] = data.confirmedSlotId;
+    if (data.confirmedCustomDate !== undefined)
+      patch["confirmed_custom_date"] = data.confirmedCustomDate;
+    if (data.confirmedCustomStart !== undefined)
+      patch["confirmed_custom_start"] = data.confirmedCustomStart;
+    if (data.confirmedCustomEnd !== undefined)
+      patch["confirmed_custom_end"] = data.confirmedCustomEnd;
     if (data.confirmedAt !== undefined) patch["confirmed_at"] = data.confirmedAt;
-    if (data.deadline !== undefined) patch["deadline"] = data.deadline;
+    if (data.deadline !== undefined) {
+      patch["deadline"] = data.deadline;
+      // Extending the deadline of an auto-expired event re-opens it for responses.
+      if (data.status === undefined && new Date(data.deadline).getTime() > Date.now()) {
+        const { data: current } = await supabase
+          .from("events")
+          .select("status")
+          .eq("id", data.id)
+          .eq("owner_id", userId)
+          .maybeSingle();
+        if (current?.status === "expired") {
+          patch["status"] = "awaiting_responses";
+          patch["reminder_sent_at"] = null;
+        }
+      }
+    }
     if (data.closedAt !== undefined) patch["closed_at"] = data.closedAt;
     const { data: row, error } = await supabase
       .from("events")
@@ -306,9 +376,12 @@ export const updateMyEvent = createServerFn({ method: "POST" })
         owner && (owner.first_name || owner.last_name)
           ? `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim()
           : "Your organiser";
-      const origin = typeof window !== "undefined" ? window.location.origin : "https://klokk.com";
+      const origin = await (await import("./klokk-origin.server")).appOrigin();
 
-      if (data.status === "confirmed") {
+      if (data.status === "confirmed" && before?.status !== "confirmed") {
+        // Casual organisers are invoiced for participants above the 35 included.
+        const { invoiceOverage } = await import("./klokk-notify.server");
+        await invoiceOverage(event.id);
         // Notify every participant who responded (and named participants who didn't).
         const recipients = new Map<string, { first: string; last: string }>();
         for (const r of event.responses) {
@@ -320,7 +393,7 @@ export const updateMyEvent = createServerFn({ method: "POST" })
           }
         }
         for (const [email, { first, last }] of recipients) {
-          sendMeetingConfirmation({
+          await sendMeetingConfirmation({
             recipientEmail: email,
             recipientFirstName: first,
             recipientLastName: last,
@@ -329,7 +402,7 @@ export const updateMyEvent = createServerFn({ method: "POST" })
             origin,
           });
         }
-      } else if (data.status === "cancelled") {
+      } else if (data.status === "cancelled" && before?.status !== "cancelled") {
         const recipients = new Map<string, { first: string; last: string }>();
         for (const r of event.responses) {
           recipients.set(r.email.toLowerCase(), { first: r.firstName, last: r.lastName });
@@ -340,7 +413,7 @@ export const updateMyEvent = createServerFn({ method: "POST" })
           }
         }
         for (const [email, { first, last }] of recipients) {
-          sendCancellation({
+          await sendCancellation({
             recipientEmail: email,
             recipientFirstName: first,
             recipientLastName: last,
@@ -450,15 +523,17 @@ export const togglePinFn = createServerFn({ method: "POST" })
 export const deleteMyAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { error } = await supabase.from("profiles").delete().eq("id", userId);
-    if (error) throw error;
+    // Deleting the sign-in account removes the profile, events, responses, credit packs
+    // and embeds with it (they all cascade from auth.users). Only the server may do this.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(context.userId);
+    if (error) throw new Error("We couldn't delete your account. Please try again or contact us.");
     return { ok: true };
   });
 
 export const updateNotificationPrefs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(z.object({ prefs: z.any() }))
+  .validator(z.object({ prefs: notifPrefsSchema }))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase
@@ -471,7 +546,17 @@ export const updateNotificationPrefs = createServerFn({ method: "POST" })
 
 export const updateEmbedSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator(z.object({ settings: z.any() }))
+  .validator(
+    z.object({
+      settings: z.object({
+        accentOverride: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+        domainAllowlist: z
+          .array(z.string().regex(/^(\*\.)?[a-z0-9.-]+\.[a-z]{2,}(:\d+)?$/))
+          .max(25),
+        embedExpiry: z.string().max(40).optional(),
+      }),
+    }),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase
@@ -509,11 +594,11 @@ export const sendInvitationsFn = createServerFn({ method: "POST" })
       owner && (owner.first_name || owner.last_name)
         ? `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim()
         : "Your organiser";
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://klokk.com";
+    const origin = await (await import("./klokk-origin.server")).appOrigin();
     let sent = 0;
     for (const p of event.namedParticipants) {
       try {
-        sendInvitation({
+        await sendInvitation({
           recipientEmail: p.email,
           recipientFirstName: p.firstName,
           recipientLastName: p.lastName,
@@ -561,11 +646,11 @@ export const sendReminderFn = createServerFn({ method: "POST" })
       owner && (owner.first_name || owner.last_name)
         ? `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim()
         : "Your organiser";
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://klokk.com";
+    const origin = await (await import("./klokk-origin.server")).appOrigin();
     let sent = 0;
     for (const p of outstanding) {
       try {
-        sendReminder({
+        await sendReminder({
           recipientEmail: p.email,
           recipientFirstName: p.firstName,
           recipientLastName: p.lastName,
@@ -579,4 +664,97 @@ export const sendReminderFn = createServerFn({ method: "POST" })
       }
     }
     return { sent };
+  });
+
+// ---------- embed widget (F10) ----------
+
+export interface EmbedLink {
+  id: string;
+  eventId: string;
+  token: string;
+  createdAt: string;
+  expiresAt: string | null;
+  revokedAt: string | null;
+  views: number;
+  interactions: number;
+  submissions: number;
+}
+
+export const listEmbeds = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ eventId: z.string() }))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const db = supabase as any;
+    const { data: rows, error } = await db
+      .from("embed_tokens")
+      .select("id, event_id, created_at, expires_at, revoked_at, events ( token )")
+      .eq("event_id", data.eventId)
+      .eq("owner_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    const { signEmbed } = await import("./klokk-embed.server");
+    const out: EmbedLink[] = [];
+    for (const r of rows ?? []) {
+      const { data: ev } = await db.from("embed_events").select("kind").eq("embed_id", r.id);
+      const kinds: string[] = (ev ?? []).map((e: any) => e.kind);
+      out.push({
+        id: r.id,
+        eventId: r.event_id,
+        token: await signEmbed({ i: r.id }),
+        createdAt: r.created_at,
+        expiresAt: r.expires_at,
+        revokedAt: r.revoked_at,
+        views: kinds.filter((k) => k === "view").length,
+        interactions: kinds.filter((k) => k === "interaction").length,
+        submissions: kinds.filter((k) => k === "submit").length,
+      });
+    }
+    return out;
+  });
+
+export const createEmbed = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    z.object({
+      eventId: z.string(),
+      /** days until the link stops working; omit to keep it valid until the event is removed */
+      expiresInDays: z.number().int().min(1).max(730).optional(),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const db = supabase as any;
+    const { data: ev } = await db
+      .from("events")
+      .select("id, token")
+      .eq("id", data.eventId)
+      .eq("owner_id", userId)
+      .maybeSingle();
+    if (!ev) throw new Error("Event not found");
+    const expiresAt = data.expiresInDays
+      ? new Date(Date.now() + data.expiresInDays * 86_400_000).toISOString()
+      : null;
+    const { data: row, error } = await db
+      .from("embed_tokens")
+      .insert({ event_id: ev.id, owner_id: userId, expires_at: expiresAt })
+      .select("id")
+      .single();
+    if (error) throw error;
+    const { signEmbed } = await import("./klokk-embed.server");
+    return { id: row.id as string, token: await signEmbed({ i: row.id }) };
+  });
+
+export const revokeEmbed = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await (supabase as any)
+      .from("embed_tokens")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("id", data.id)
+      .eq("owner_id", userId);
+    if (error) throw error;
+    return { ok: true };
   });

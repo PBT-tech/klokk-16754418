@@ -31,3 +31,11 @@ src/tailwind.config.vibe.json
 *.njsproj
 *.sln
 *.sw?
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local documentation library (not published to GitHub)
+/library/
