@@ -15,6 +15,7 @@ import {
   sendReminder,
   sendInvitation,
 } from "./klokk-email";
+import { isAllowedDomain } from "./klokk-domains";
 import type { ChatMessage, KlokkEvent, NamedParticipant, TimeSlot } from "./klokk-types";
 
 const EVENT_SELECT = `
@@ -551,7 +552,7 @@ export const updateEmbedSettings = createServerFn({ method: "POST" })
       settings: z.object({
         accentOverride: z.string().regex(/^#[0-9a-fA-F]{6}$/),
         domainAllowlist: z
-          .array(z.string().regex(/^(\*\.)?[a-z0-9.-]+\.[a-z]{2,}(:\d+)?$/))
+          .array(z.string().refine(isAllowedDomain, "Not an allowed website entry"))
           .max(25),
         embedExpiry: z.string().max(40).optional(),
       }),

@@ -18,7 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Post-signup "Check your inbox" screen explaining how to verify an email, with a resend button; the same guidance on sign-in and on the dashboard for unverified accounts.
+- Embed panel: a "website this link is for" field next to Create link (adds the site to the allowed list), with script and iframe code shown straight away and a copy button.
+- Plan limits guide on event creation covering participants per plan, pricing and overage.
+
 ### Changed
+
+- Creating an event is blocked at the first step until the email is verified, instead of failing at the end.
+- Every price shown to users now states its currency (AUD).
+- Wildcard entries on shared domains (for example `*.co.uk`, `*.vercel.app`) are rejected from the embed allowed-websites list.
 
 ### Deprecated
 

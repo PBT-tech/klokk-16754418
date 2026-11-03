@@ -44,7 +44,7 @@ export function participantWarning(
       lines: [
         `The Free plan stops accepting responses at 35 participants${of}.`,
         `Casual (credit packs) includes 35 participants per event and keeps accepting responses beyond that. Extra participants are charged per event in blocks of 5: ${aud(6.2)} per block from 36 to 50, then ${aud(5.3)} per block. For example: 40 participants = ${aud(casualOverage(40).amount)}, 50 = ${aud(casualOverage(50).amount)}, 60 = ${aud(casualOverage(60).amount)}.`,
-        `Organiser ($17/month) allows up to 80 participants per event with no extra charges.`,
+        `Organiser ($17 AUD/month) allows up to 80 participants per event with no extra charges.`,
       ],
     };
   }
@@ -65,7 +65,7 @@ export function participantWarning(
           ? `Overage so far${of}: ${aud(over.amount)} (${over.blocks} block${over.blocks === 1 ? "" : "s"} of 5). It will be invoiced to you after the event is confirmed.`
           : `Beyond 35 participants, extra participants are charged per event and invoiced to you after the event is confirmed.`,
         `Rates: ${aud(6.2)} per block of 5 from 36 to 50 participants, then ${aud(5.3)} per block. Estimates: 50 participants = ${aud(over50.amount)}, 60 = ${aud(over60.amount)}.`,
-        `Organiser ($17/month) covers up to 80 participants per event with no overage.`,
+        `Organiser ($17 AUD/month) covers up to 80 participants per event with no overage.`,
       ],
     };
   }
@@ -80,7 +80,7 @@ export function participantWarning(
           : `This event is close to the Organiser limit (${count} of 80 participants)`,
       lines: [
         `Organiser allows up to 80 participants per event${of}.`,
-        `Teams ($35/month) has unlimited participants per event.`,
+        `Teams ($35 AUD/month) has unlimited participants per event.`,
       ],
     };
   }
@@ -106,8 +106,8 @@ export function eventsWarning(b: EventsLike): LimitWarning | null {
           ? `You've used all ${FREE_LIFETIME_EVENTS} free events`
           : `You have 1 free event left`,
       lines: [
-        `Credit packs start at $25 for 5 events, $45 for 10 or $60 for 15 (credits last 3 months).`,
-        `Organiser is $17/month for unlimited events (up to 80 participants each).`,
+        `Credit packs start at $25 AUD for 5 events, $45 AUD for 10 or $60 AUD for 15 (credits last 3 months).`,
+        `Organiser is $17 AUD/month for unlimited events (up to 80 participants each).`,
       ],
     };
   }
@@ -120,8 +120,8 @@ export function eventsWarning(b: EventsLike): LimitWarning | null {
         level: b.creditsLeft === 0 ? "warn" : "info",
         title: b.creditsLeft === 0 ? "You're out of event credits" : "You have 1 event credit left",
         lines: [
-          `A new pack costs $25 (5 events), $45 (10) or $60 (15).`,
-          `If you run more than a few events a month, Organiser ($17/month, unlimited events) costs less than buying packs.`,
+          `A new pack costs $25 AUD (5 events), $45 AUD (10) or $60 AUD (15).`,
+          `If you run more than a few events a month, Organiser ($17 AUD/month, unlimited events) costs less than buying packs.`,
         ],
       };
     }
@@ -132,7 +132,7 @@ export function eventsWarning(b: EventsLike): LimitWarning | null {
         title: "Your event credits expire within 7 days",
         lines: [
           `Unused credits are lost when the pack expires (3 months after purchase).`,
-          `Repurchasing packs costs more than Organiser ($17/month, unlimited events) if you run several events a month.`,
+          `Repurchasing packs costs more than Organiser ($17 AUD/month, unlimited events) if you run several events a month.`,
         ],
       };
     }

@@ -16,6 +16,7 @@ import { useBilling, useClaimOrder, useUpdateEmbedSettings } from "@/lib/klokk-h
 import { FREE_LIFETIME_EVENTS } from "@/lib/klokk-limits";
 import { eventsWarning } from "@/lib/klokk-warnings";
 import { LimitBanner } from "@/components/klokk/limit-banner";
+import { DOMAIN_HELP, isAllowedDomain } from "@/lib/klokk-domains";
 import type { KlokkAccount } from "@/lib/klokk-types";
 
 function Card({
@@ -70,25 +71,29 @@ const PLANS = [
   {
     id: "free",
     name: "Free (Trial)",
-    price: "$0",
+    price: "$0 AUD",
     cta: "",
-    points: ["3 events in total", "Up to 35 participants per event", "1 organiser seat"],
+    points: [
+      "3 events in total",
+      "Up to 35 participants per event (no more can respond after that)",
+      "1 organiser seat",
+    ],
   },
   {
     id: "casual",
     name: "Casual (Credit Packs)",
-    price: "$25 for 5 · $45 for 10 · $60 for 15 events",
+    price: "$25 AUD for 5 events · $45 AUD for 10 · $60 AUD for 15",
     cta: "Buy a credit pack",
     points: [
       "Credits expire 3 months after purchase",
-      "35 participants per event included",
-      "Extra participants: $6.20 per block of 5 (36–50), then $5.30, charged per event",
+      "35 participants per event included (more are allowed, billed as overage)",
+      "Extra participants: $6.20 AUD per block of 5 (36–50), then $5.30 AUD per block from 51, charged per event",
     ],
   },
   {
     id: "organiser",
     name: "Organiser",
-    price: "$17 / month",
+    price: "$17 AUD / month",
     cta: "Choose Organiser",
     points: [
       "Unlimited events",
@@ -99,7 +104,7 @@ const PLANS = [
   {
     id: "teams",
     name: "Teams",
-    price: "$35 / month + $8 / extra seat",
+    price: "$35 AUD / month + $8 AUD / month per extra seat",
     cta: "Choose Teams",
     points: [
       "3 organiser seats included",
@@ -367,8 +372,8 @@ export function EmbedTab({ account }: { account: KlokkAccount }) {
       .toLowerCase()
       .replace(/^https?:\/\//, "")
       .replace(/\/.*$/, "");
-    if (!/^(\*\.)?[a-z0-9.-]+\.[a-z]{2,}(:\d+)?$/.test(d)) {
-      toast.error("Enter a domain like www.example.com or *.example.com");
+    if (!isAllowedDomain(d)) {
+      toast.error(DOMAIN_HELP);
       return;
     }
     if (!domains.includes(d)) setDomains([...domains, d]);
