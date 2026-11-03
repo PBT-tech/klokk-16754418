@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/klokk/status-badge";
 import { Avatar } from "@/components/klokk/avatar";
 import { useBilling, useCurrentAccount, useOwnedEvents, useSession } from "@/lib/klokk-hooks";
 import { LimitBanner } from "@/components/klokk/limit-banner";
+import { VerifyEmailNotice } from "@/components/klokk/verify-email-notice";
 import { eventsWarning, participantWarning } from "@/lib/klokk-warnings";
 import { computeStatus } from "@/lib/klokk-store";
 import { formatDateShort, relativeDeadline, daysUntil } from "@/lib/klokk-format";
@@ -94,6 +95,7 @@ function Dashboard() {
           automatically 90 days after it is created. This can't be undone.
         </p>
       )}
+      {!account.emailVerified && <VerifyEmailNotice email={account.email} />}
       {bannerWarning && <LimitBanner warning={bannerWarning} />}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">

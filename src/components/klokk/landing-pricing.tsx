@@ -29,7 +29,7 @@ export function Pricing() {
         />
         <p className="mx-auto mt-4 max-w-2xl text-center text-sm text-pricing-subtext font-semibold">
           Start with 3 free events, buy credit packs as needed, or subscribe for unlimited
-          scheduling.
+          scheduling. All prices are in Australian dollars (AUD).
         </p>
 
         {/* 4 Plans Grid */}
@@ -40,7 +40,7 @@ export function Pricing() {
               <div className="inline-flex rounded-full bg-surface px-2.5 py-0.5 text-sm font-medium text-muted-foreground">
                 Free (Trial)
               </div>
-              <p className="mt-3 font-display text-4xl font-bold text-pricing-amount">$0</p>
+              <p className="mt-3 font-display text-4xl font-bold text-pricing-amount">$0 AUD</p>
               <p className="mt-1 text-sm text-muted-foreground">3 lifetime events total</p>
               <div className="my-5 h-px bg-border/70" />
               <ul className="space-y-2.5 text-sm text-muted-foreground">
@@ -86,21 +86,23 @@ export function Pricing() {
               <div className="inline-flex rounded-full bg-surface px-2.5 py-0.5 text-sm font-medium text-muted-foreground">
                 Casual (Credit Packs)
               </div>
-              <p className="mt-3 font-display text-3xl font-bold text-pricing-amount">From $25</p>
+              <p className="mt-3 font-display text-3xl font-bold text-pricing-amount">
+                From $25 AUD
+              </p>
               <p className="mt-1 text-sm text-muted-foreground">Pay as you schedule</p>
               <div className="my-5 h-px bg-border/70" />
               <div className="rounded-lg bg-surface/70 p-2.5 text-sm space-y-1 mb-4 border border-border/50">
                 <div className="flex justify-between font-medium text-casual-block-row">
                   <span>5 events</span>
-                  <span className="font-semibold">$25</span>
+                  <span className="font-semibold">$25 AUD</span>
                 </div>
                 <div className="flex justify-between text-casual-block-row">
                   <span>10 events</span>
-                  <span className="font-semibold">$45</span>
+                  <span className="font-semibold">$45 AUD</span>
                 </div>
                 <div className="flex justify-between text-casual-block-row">
                   <span>15 events</span>
-                  <span className="font-semibold">$60</span>
+                  <span className="font-semibold">$60 AUD</span>
                 </div>
               </div>
               <ul className="space-y-2.5 text-sm text-muted-foreground">
@@ -143,7 +145,7 @@ export function Pricing() {
                 Organiser
               </div>
               <p className="mt-3 font-display text-4xl font-bold text-foreground text-ring text-pricing-popular">
-                $17 pm
+                $17 AUD / month
               </p>
               <p className="mt-1 text-sm text-muted-foreground">(billed monthly or annually)</p>
               <p className="mt-0.5 text-sm font-medium text-accent">
@@ -188,9 +190,11 @@ export function Pricing() {
               <div className="inline-flex rounded-full bg-surface px-2.5 py-0.5 text-sm font-medium text-muted-foreground">
                 Teams
               </div>
-              <p className="mt-3 font-display text-4xl font-bold text-pricing-amount">$35 pm</p>
+              <p className="mt-3 font-display text-4xl font-bold text-pricing-amount">
+                $35 AUD / month
+              </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                base plan + $8 pm each extra organiser
+                base plan + $8 AUD / month for each extra organiser
               </p>
               <p className="mt-0.5 text-sm font-medium text-accent">
                 Annual: 2 months free (pay 10, get 12)
@@ -252,14 +256,14 @@ export function Pricing() {
                   1–3 Blocks (36–50 guests)
                 </p>
                 <p className="mt-1 font-display text-lg font-bold text-casual-block-price">
-                  $6.20 each block
+                  $6.20 AUD each block
                 </p>
                 <p className="text-sm text-muted-foreground">5 participants per block</p>
               </div>
               <div className="rounded-xl border border-border bg-surface/50 p-3 text-center">
                 <p className="text-sm font-medium text-muted-foreground">4+ Blocks (51+ guests)</p>
                 <p className="mt-1 font-display text-lg font-bold text-casual-block-price">
-                  $5.30 each block
+                  $5.30 AUD each block
                 </p>
                 <p className="text-sm text-muted-foreground">5 participants per block</p>
               </div>

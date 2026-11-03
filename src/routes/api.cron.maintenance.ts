@@ -119,7 +119,7 @@ async function run(request: Request): Promise<Response> {
         lines: [
           `Events on the Free plan, with all their responses and participant details, are deleted automatically 90 days after they are created. This cannot be undone.`,
           `Paid plans keep event data for 12 months after the event closes.`,
-          `Organiser is $17/month for unlimited events, or buy a credit pack from $25.`,
+          `Organiser is $17 AUD/month for unlimited events, or buy a credit pack from $25 AUD.`,
         ],
       },
     });

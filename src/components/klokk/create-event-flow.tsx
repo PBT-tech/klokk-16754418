@@ -28,7 +28,9 @@ import { uploadParticipantAvatar } from "@/lib/klokk-avatars";
 import { useCreateEvent } from "@/lib/klokk-hooks";
 import { toSlotLabel } from "@/lib/klokk-format";
 import { participantCapForPlan } from "@/lib/klokk-limits";
-import type { KlokkAccount, KlokkEvent, NamedParticipant } from "@/lib/klokk-types";
+import { PlanLimitsGuide } from "@/components/klokk/plan-limits-guide";
+import { VerifyEmailNotice } from "@/components/klokk/verify-email-notice";
+import type { KlokkAccount, KlokkEvent, KlokkPlanTier, NamedParticipant } from "@/lib/klokk-types";
 
 export function CreateEventFlow({ account }: { account: KlokkAccount }) {
   const navigate = useNavigate();
@@ -43,7 +45,7 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
   const canProceed = useMemo(() => {
     switch (step) {
       case 0:
-        return draft.title.trim().length > 0;
+        return account.emailVerified && draft.title.trim().length > 0;
       case 1:
         return draft.slots.length > 0;
       case 2:
@@ -55,7 +57,7 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
       default:
         return true;
     }
-  }, [step, draft]);
+  }, [step, draft, account.emailVerified]);
 
   if (created) return <CreatedView event={created} />;
 
@@ -111,13 +113,20 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
         Create an event
       </h1>
 
+      {!account.emailVerified && <VerifyEmailNotice email={account.email} />}
+
       <Stepper step={step} />
 
       <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-premium sm:p-8">
         {step === 0 && <DetailsStep draft={draft} set={set} />}
         {step === 1 && <SlotsStep draft={draft} set={set} />}
         {step === 2 && (
-          <ParticipantsStep draft={draft} set={set} cap={participantCapForPlan(account.plan)} />
+          <ParticipantsStep
+            draft={draft}
+            set={set}
+            cap={participantCapForPlan(account.plan)}
+            plan={account.plan}
+          />
         )}
         {step === 3 && <DeadlineStep draft={draft} set={set} />}
         {step === 4 && <ReviewStep draft={draft} />}
@@ -247,11 +256,13 @@ function ParticipantsStep({
   draft,
   set,
   cap,
+  plan,
 }: {
   draft: Draft;
   set: <K extends keyof Draft>(key: K, value: Draft[K]) => void;
   /** hard participant cap for the organiser's plan, or null when there is none */
   cap: number | null;
+  plan: KlokkPlanTier;
 }) {
   return (
     <div className="space-y-6">
@@ -289,10 +300,7 @@ function ParticipantsStep({
             }
             className="max-w-xs"
           />
-          <p className="text-xs text-muted-foreground">
-            Free trial: up to 35 participants per event (hard cap). Casual packs: 35 included with
-            overage blocks available. Organiser: up to 80. Teams: unlimited.
-          </p>
+          <PlanLimitsGuide currentPlan={plan} />
         </div>
       ) : (
         <NamedList draft={draft} set={set} cap={cap} />

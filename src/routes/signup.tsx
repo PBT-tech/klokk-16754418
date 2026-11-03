@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { sendSignupNotification } from "@/lib/klokk-email";
 import { buildTrackingPayload, postTrackingEvent } from "@/lib/klokk-tracking";
 import { useSession } from "@/lib/klokk-hooks";
+import { ResendVerificationButton } from "@/components/klokk/verify-email-notice";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -42,6 +44,7 @@ type FormValues = z.infer<typeof schema>;
 function SignUp() {
   const navigate = useNavigate();
   const session = useSession();
+  const [sentTo, setSentTo] = useState<string | null>(null);
 
   if (session) {
     navigate({ to: "/events/new" });
@@ -135,13 +138,46 @@ function SignUp() {
 
     if (!data?.session) {
       // Email confirmation is on: there is no session until the address is verified.
-      toast.success("Account created — check your inbox to verify your email, then sign in.");
-      navigate({ to: "/signin" });
+      setSentTo(values.email);
       return;
     }
     toast.success("Account created — welcome to Klokk");
     navigate({ to: "/events/new" });
   };
+
+  if (sentTo) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] w-full bg-signup-page-bg">
+        <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-4 py-12">
+          <div className="rounded-2xl border border-border bg-signup-section-bg p-8 shadow-premium">
+            <MailCheck className="size-8 text-primary" />
+            <h1 className="mt-3 font-display text-2xl font-semibold text-signup-heading text-sidebar-primary-foreground text-pricing-amount">
+              Check your inbox
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your account is created. We sent a verification email to <strong>{sentTo}</strong>.
+            </p>
+            <ol className="mt-4 list-decimal space-y-1.5 pl-5 text-sm text-foreground">
+              <li>Open the email from Klokk (check your spam or junk folder if it isn't there).</li>
+              <li>
+                Click the <strong>verify</strong> link in the email.
+              </li>
+              <li>Come back and sign in. You can then create events.</li>
+            </ol>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <ResendVerificationButton email={sentTo} />
+              <Link
+                to="/signin"
+                className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Go to sign in
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] w-full bg-signup-page-bg">

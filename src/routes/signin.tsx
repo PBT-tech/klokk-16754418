@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { KlokkFullLogo } from "@/components/klokk/logo";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/klokk-hooks";
+import { ResendVerificationButton } from "@/components/klokk/verify-email-notice";
 
 export const Route = createFileRoute("/signin")({
   head: () => ({
@@ -36,6 +37,7 @@ type FormValues = z.infer<typeof schema>;
 function SignIn() {
   const navigate = useNavigate();
   const session = useSession();
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
 
   if (session) {
     navigate({ to: "/dashboard" });
@@ -54,6 +56,11 @@ function SignIn() {
         password: values.password,
       });
       if (error) {
+        if (error.code === "email_not_confirmed" || /not confirmed/i.test(error.message)) {
+          setUnverifiedEmail(values.email);
+          return;
+        }
+        setUnverifiedEmail(null);
         toast.error(error.message);
         return;
       }
@@ -100,6 +107,21 @@ function SignIn() {
               <p className="text-xs text-destructive">{errors.password.message}</p>
             )}
           </div>
+          {unverifiedEmail && (
+            <div
+              role="alert"
+              className="rounded-lg border border-border bg-surface/60 p-3 text-xs text-foreground"
+            >
+              <p className="font-medium">Your email isn't verified yet.</p>
+              <p className="mt-1 text-muted-foreground">
+                Open the verification email we sent to {unverifiedEmail} (check spam or junk), click
+                the <strong>verify</strong> link, then sign in again.
+              </p>
+              <div className="mt-2">
+                <ResendVerificationButton email={unverifiedEmail} />
+              </div>
+            </div>
+          )}
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             Sign in
             <ArrowRight className="size-4" />
