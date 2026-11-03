@@ -37,4 +37,10 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  {
+    // AI Studio / Supabase regenerate these files (including types.ts) without our
+    // formatting, so formatting is not enforced here. Real lint rules still apply.
+    files: ["src/integrations/**"],
+    rules: { "prettier/prettier": "off" },
+  },
 );
