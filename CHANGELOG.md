@@ -36,4 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Migration `20261104000000` attaches the profile protection triggers (`profiles_protect_privileged`, `on_auth_user_email_confirmed`) that were missing from the live database, so signed-in users can no longer edit their own plan, verified flag, event counter or billing fields.
+
 [Unreleased]: https://github.com/PBT-tech/Klokk/commits/main
