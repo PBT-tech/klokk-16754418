@@ -28,6 +28,7 @@ export interface ParticipantResponse {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string | undefined;
   /** slot ids the participant marked available */
   slotIds: string[];
   notes?: string | undefined;
@@ -61,6 +62,8 @@ export interface KlokkEvent {
   chat: ChatMessage[];
   status: EventStatus;
   confirmedSlotId?: string;
+  /** Organiser-entered meeting time that is not one of the proposed slots. */
+  confirmedCustom?: { date: string; startTime: string; endTime: string };
   confirmedAt?: string;
   createdAt: string; // ISO
   closedAt?: string;

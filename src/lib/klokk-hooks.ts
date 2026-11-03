@@ -20,10 +20,15 @@ import {
   deleteMyAccount,
   updateNotificationPrefs,
   updateEmbedSettings,
+  listEmbeds,
+  createEmbed,
+  revokeEmbed,
   sendReminderFn,
   sendInvitationsFn,
 } from "./klokk-organiser.functions";
-import { getPublicEvent, submitResponse } from "./klokk-public.functions";
+import { getEditToken } from "./klokk-edit-token";
+import { claimOrder, getMyBilling } from "./klokk-billing.functions";
+import { getPublicEvent, lookupMyResponse, submitResponse } from "./klokk-public.functions";
 import type { KlokkAccount, KlokkEvent } from "./klokk-types";
 
 export function useEnsureSeeded() {
@@ -80,6 +85,20 @@ export function useEventByToken(token: string | undefined): KlokkEvent | undefin
     queryKey: ["klokk-public-event", token],
     queryFn: () => fn({ data: { token: token! } }),
     enabled: !!token,
+  });
+  return data ?? undefined;
+}
+
+/** F4: the participant's own earlier answer, looked up by token + email. */
+export function useMyResponse(token: string | undefined, email: string) {
+  const fn = useServerFn(lookupMyResponse);
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const editToken = token && valid ? getEditToken(token, email) : undefined;
+  const { data } = useQuery({
+    queryKey: ["klokk-my-response", token, email.trim().toLowerCase(), !!editToken],
+    queryFn: () => fn({ data: { token: token!, email: email.trim(), editToken: editToken! } }),
+    enabled: !!token && valid && !!editToken,
+    staleTime: 30_000,
   });
   return data ?? undefined;
 }
@@ -167,6 +186,57 @@ export function useUpdateEmbedSettings() {
   return useMutation({
     mutationFn: (input: any) => fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["klokk-profile"] }),
+  });
+}
+
+export function useBilling() {
+  const fn = useServerFn(getMyBilling);
+  const session = useSession();
+  const { data } = useQuery({
+    queryKey: ["klokk-billing"],
+    queryFn: () => fn(),
+    enabled: !!session,
+  });
+  return data ?? undefined;
+}
+
+export function useClaimOrder() {
+  const qc = useQueryClient();
+  const fn = useServerFn(claimOrder);
+  return useMutation({
+    mutationFn: (input: { orderId: string }) => fn({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["klokk-billing"] });
+      qc.invalidateQueries({ queryKey: ["klokk-profile"] });
+    },
+  });
+}
+
+export function useEmbeds(eventId: string | undefined) {
+  const fn = useServerFn(listEmbeds);
+  const { data } = useQuery({
+    queryKey: ["klokk-embeds", eventId],
+    queryFn: () => fn({ data: { eventId: eventId! } }),
+    enabled: !!eventId,
+  });
+  return data ?? [];
+}
+
+export function useCreateEmbed() {
+  const qc = useQueryClient();
+  const fn = useServerFn(createEmbed);
+  return useMutation({
+    mutationFn: (input: { eventId: string; expiresInDays?: number }) => fn({ data: input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["klokk-embeds"] }),
+  });
+}
+
+export function useRevokeEmbed() {
+  const qc = useQueryClient();
+  const fn = useServerFn(revokeEmbed);
+  return useMutation({
+    mutationFn: (input: { id: string }) => fn({ data: input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["klokk-embeds"] }),
   });
 }
 
