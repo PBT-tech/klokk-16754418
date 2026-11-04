@@ -50,5 +50,29 @@ export function isAllowedDomain(d: string): boolean {
   return true;
 }
 
+/**
+ * Turn the organiser's allowed websites into the hosts a page may be framed from.
+ * Entering example.com (or www.example.com) allows example.com, www.example.com and every
+ * subdomain of it. Pages on any path are covered automatically (the browser check ignores paths).
+ * Shared hosts such as co.uk or vercel.app are never widened to their subdomains.
+ */
+export function frameAncestorHosts(entries: string[]): string[] {
+  const out = new Set<string>();
+  for (const raw of entries) {
+    const d = raw.trim().toLowerCase();
+    if (!DOMAIN_RE.test(d)) continue;
+    const port = d.match(/:\d+$/)?.[0] ?? "";
+    const host = d
+      .replace(/:\d+$/, "")
+      .replace(/^\*\./, "")
+      .replace(/^www\./, "");
+    out.add(`${host}${port}`);
+    out.add(`www.${host}${port}`);
+    const labels = host.split(".");
+    if (labels.length >= 2 && !PUBLIC_SUFFIXES.has(host)) out.add(`*.${host}${port}`);
+  }
+  return [...out];
+}
+
 export const DOMAIN_HELP =
-  "Enter a website like www.example.com, or *.example.com for all of its subdomains. Wildcards on shared domains such as *.co.uk or *.vercel.app aren't allowed.";
+  "Enter your website like example.com. Its www version, every subdomain (blog.example.com) and every page on it are allowed automatically. Wildcards on shared domains such as *.co.uk or *.vercel.app aren't allowed.";
