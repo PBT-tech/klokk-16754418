@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Create-event time step explains how to offer several times on one date, with AM/PM dropdowns and times grouped by date.
+- "Embed on a website" button on the event-created screen and an "Embed code" button on the event page.
+
 - Post-signup "Check your inbox" screen explaining how to verify an email, with a resend button; the same guidance on sign-in and on the dashboard for unverified accounts.
 - Embed panel: a "website this link is for" field next to Create link (adds the site to the allowed list), with script and iframe code shown straight away and a copy button.
 - Plan limits guide on event creation covering participants per plan, pricing and overage.
