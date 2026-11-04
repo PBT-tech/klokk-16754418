@@ -113,7 +113,8 @@ export function EditEventDialog({ event }: { event: KlokkEvent }) {
           <DialogTitle>Edit event</DialogTitle>
           <DialogDescription>
             Change the details or the times people can pick from. Participants see the changes
-            straight away; they are not emailed automatically.
+            straight away, and everyone on the event is emailed a list of exactly what changed. You
+            get a copy too.
           </DialogDescription>
         </DialogHeader>
 

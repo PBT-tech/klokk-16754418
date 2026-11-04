@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Editing an event emails every participant (and the organiser, as a copy) a list of exactly what changed. Needs the "Klokk Event Updated" HighLevel workflow.
+
 - Organisers can edit an event's title, description, location and time slots from the event page. Removing a slot that people picked asks for confirmation first and takes it out of their answers.
 
 - Create-event time step explains how to offer several times on one date, with AM/PM dropdowns and times grouped by date.

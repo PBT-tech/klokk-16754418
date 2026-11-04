@@ -14,8 +14,10 @@ import {
   sendCancellation,
   sendReminder,
   sendInvitation,
+  sendEventUpdated,
 } from "./klokk-email";
 import { isAllowedDomain } from "./klokk-domains";
+import { toSlotLabel } from "./klokk-format";
 import type { ChatMessage, KlokkEvent, NamedParticipant, TimeSlot } from "./klokk-types";
 
 const EVENT_SELECT = `
@@ -487,12 +489,13 @@ export const editMyEvent = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: ev, error: evErr } = await supabase
       .from("events")
-      .select("id, status, time_slots ( id )")
+      .select(EVENT_SELECT)
       .eq("id", data.id)
       .eq("owner_id", userId)
       .maybeSingle();
     if (evErr) throw evErr;
     if (!ev) throw new Error("Event not found");
+    const before: KlokkEvent = mapEvent(ev);
 
     const changingSlots = data.addSlots.length > 0 || data.removeSlotIds.length > 0;
     if (changingSlots && ["confirmed", "cancelled", "closed"].includes(ev.status)) {
@@ -505,7 +508,7 @@ export const editMyEvent = createServerFn({ method: "POST" })
         throw new Error("Each slot's start time must be before its end time.");
     }
 
-    const existing = new Set(((ev.time_slots ?? []) as { id: string }[]).map((t) => t.id));
+    const existing = new Set(before.slots.map((t) => t.id));
     const toRemove = data.removeSlotIds.filter((id) => existing.has(id));
     const finalCount = existing.size - toRemove.length + data.addSlots.length;
     if (finalCount < 1) throw new Error("An event needs at least one time slot.");
@@ -562,8 +565,130 @@ export const editMyEvent = createServerFn({ method: "POST" })
       .select(EVENT_SELECT)
       .single();
     if (error) throw error;
-    return mapEvent(row);
+    const after: KlokkEvent = mapEvent(row);
+
+    // Email everyone involved, in detail, about what changed (best-effort).
+    try {
+      await notifyEventEdited({ supabase, userId, before, after, removedIds: toRemove });
+    } catch {
+      /* notifications are best-effort */
+    }
+    return after;
   });
+
+/** Plain-text list of what the organiser changed, or "" when nothing visible changed. */
+function describeChanges(before: KlokkEvent, after: KlokkEvent): string[] {
+  const lines: string[] = [];
+  if (before.title !== after.title) lines.push(`Title: "${before.title}" is now "${after.title}"`);
+  if ((before.description ?? "") !== (after.description ?? "")) {
+    lines.push(
+      after.description
+        ? `Description updated. It now reads: ${after.description}`
+        : "Description removed.",
+    );
+  }
+  if ((before.location ?? "") !== (after.location ?? "")) {
+    lines.push(
+      after.location
+        ? `Location: "${before.location || "not set"}" is now "${after.location}"`
+        : "Location removed.",
+    );
+  }
+  const label = (s: TimeSlot) => toSlotLabel(s.date, s.startTime, s.endTime);
+  const key = (s: TimeSlot) => `${s.date}|${s.startTime}|${s.endTime}`;
+  const oldKeys = new Set(before.slots.map(key));
+  const newKeys = new Set(after.slots.map(key));
+  const addedSlots = after.slots.filter((s) => !oldKeys.has(key(s))).map(label);
+  const removedSlots = before.slots.filter((s) => !newKeys.has(key(s))).map(label);
+  if (addedSlots.length) lines.push(`New times you can pick: ${addedSlots.join("; ")}`);
+  if (removedSlots.length) lines.push(`Times no longer available: ${removedSlots.join("; ")}`);
+  return lines;
+}
+
+async function notifyEventEdited(args: {
+  supabase: any;
+  userId: string;
+  before: KlokkEvent;
+  after: KlokkEvent;
+  removedIds: string[];
+}) {
+  const { supabase, userId, before, after, removedIds } = args;
+  const lines = describeChanges(before, after);
+  if (lines.length === 0) return;
+
+  const { data: owner } = await supabase
+    .from("profiles")
+    .select("first_name, last_name, email")
+    .eq("id", userId)
+    .maybeSingle();
+  const organiserName =
+    owner && (owner.first_name || owner.last_name)
+      ? `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim()
+      : "Your organiser";
+  const origin = await (await import("./klokk-origin.server")).appOrigin();
+
+  type Who = { first: string; last: string; lostPick: boolean };
+  const recipients = new Map<string, Who>();
+  for (const n of after.namedParticipants) {
+    recipients.set(n.email.toLowerCase(), {
+      first: n.firstName,
+      last: n.lastName,
+      lostPick: false,
+    });
+  }
+  for (const r of before.responses) {
+    // Anyone who had picked a time that is now gone needs to choose again.
+    const lostPick = r.slotIds.some((id) => removedIds.includes(id));
+    recipients.set(r.email.toLowerCase(), { first: r.firstName, last: r.lastName, lostPick });
+  }
+
+  const send = (email: string, first: string, last: string, extra: string[], intro: string) =>
+    sendEventUpdated({
+      recipientEmail: email,
+      recipientFirstName: first,
+      recipientLastName: last,
+      event: after,
+      organiserName,
+      origin,
+      changes: [intro, ...lines.map((l) => `- ${l}`), ...extra].join("\n"),
+    });
+
+  const jobs: (() => Promise<unknown>)[] = [];
+  for (const [email, w] of recipients) {
+    jobs.push(() =>
+      send(
+        email,
+        w.first,
+        w.last,
+        w.lostPick
+          ? [
+              "",
+              "One of the times you picked is no longer available. Please open your link and choose again.",
+            ]
+          : [],
+        `${organiserName} has updated "${after.title}":`,
+      ),
+    );
+  }
+  // A copy for the organiser, as a record of what was sent.
+  if (owner?.email && !recipients.has(String(owner.email).toLowerCase())) {
+    jobs.push(() =>
+      send(
+        owner.email,
+        owner.first_name ?? "",
+        owner.last_name ?? "",
+        [
+          "",
+          `This update was emailed to ${recipients.size} participant${recipients.size === 1 ? "" : "s"}.`,
+        ],
+        `You updated "${after.title}":`,
+      ),
+    );
+  }
+  for (let i = 0; i < jobs.length; i += 10) {
+    await Promise.allSettled(jobs.slice(i, i + 10).map((j) => j()));
+  }
+}
 
 export const deleteMyEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
