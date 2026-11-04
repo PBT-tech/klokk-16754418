@@ -145,7 +145,7 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
           setOpen((prev) => new Set(prev).add(res.id));
           setSite("");
           setDays("");
-          toast.success("Embed link created. Your code is below.");
+          toast.success("Embed code created. Copy it from below.");
         },
         onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create embed"),
       },
@@ -155,9 +155,9 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
   return (
     <div className="rounded-xl border border-border bg-card p-3">
       <p className="mb-3 text-xs text-muted-foreground">
-        Put this event on a website. Create a link for each website you want to use it on, then copy
-        the code and paste it into that site. You can revoke a link at any time without touching the
-        site.
+        Put this event on a website. Create an embed code for each website you want to use it on,
+        then copy the code and paste it into that site. You can revoke a link at any time without
+        touching the site.
       </p>
 
       <div className="mb-3 space-y-2 rounded-lg border border-border p-2">
@@ -187,7 +187,7 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
             value={days}
             onChange={(e) => setDays(e.target.value)}
             placeholder="Expires in days (optional)"
-            aria-label="Days until the embed link expires"
+            aria-label="Days until the embed code expires"
             className="h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-3 text-xs"
           />
           <Button
@@ -196,14 +196,14 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
             disabled={create.isPending || updateSettings.isPending}
           >
             <Plus className="size-3.5" />
-            Create link
+            Create embed code
           </Button>
         </div>
       </div>
 
       {embeds.length === 0 && (
         <p className="text-xs text-muted-foreground">
-          No embed links yet. Create one above and the code to paste appears here.
+          No embed codes yet. Click "Create embed code" above and the code to paste appears here.
         </p>
       )}
       <ul className="space-y-3">
@@ -240,7 +240,7 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
                       onClick={() =>
                         revoke.mutate(
                           { id: e.id },
-                          { onSuccess: () => toast.message("Embed link revoked") },
+                          { onSuccess: () => toast.message("Embed code revoked") },
                         )
                       }
                     >
