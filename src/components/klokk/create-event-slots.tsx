@@ -180,7 +180,7 @@ export function SlotsStep({
             />
           )}
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="mt-4 space-y-3">
             <TimePicker label="Start time" value={start} onChange={setStart} />
             <TimePicker label="End time" value={end} onChange={setEnd} />
           </div>
