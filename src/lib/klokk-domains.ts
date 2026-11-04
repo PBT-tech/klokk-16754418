@@ -51,4 +51,4 @@ export function isAllowedDomain(d: string): boolean {
 }
 
 export const DOMAIN_HELP =
-  "Enter a website like www.example.com, or *.example.com for all of its subdomains. Wildcards on shared domains such as *.co.uk or *.vercel.app aren't allowed.";
+  "Enter your website like example.com (www.example.com is allowed too), or *.example.com for all of its subdomains. Wildcards on shared domains such as *.co.uk or *.vercel.app aren't allowed.";
