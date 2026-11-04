@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KlokkLogo } from "@/components/klokk/logo";
 import { AvatarUpload, Avatar } from "@/components/klokk/avatar";
-import { useEventByToken, useMyResponse, useSubmitResponse } from "@/lib/klokk-hooks";
+import { useEventByTokenState, useMyResponse, useSubmitResponse } from "@/lib/klokk-hooks";
 import { computeStatus } from "@/lib/klokk-store";
 import {
   confirmedTimeLabel,
@@ -26,7 +26,7 @@ import { buildTrackingPayload, postTrackingEvent } from "@/lib/klokk-tracking";
  */
 export function ParticipantResponseView({ token }: { token: string }) {
   const embedded = token.startsWith("emb.");
-  const event = useEventByToken(token);
+  const { event, loading } = useEventByTokenState(token);
   const navigate = useNavigate();
   const submitResponse = useSubmitResponse();
 
@@ -49,6 +49,24 @@ export function ParticipantResponseView({ token }: { token: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prior]);
 
+  if (loading) {
+    // Show a placeholder while the event loads, not "Event not found".
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        aria-label="Loading event"
+        className="mx-auto max-w-md space-y-4 px-4 py-10"
+      >
+        <div className="h-7 w-2/3 animate-pulse rounded-md bg-surface-muted" />
+        <div className="h-4 w-1/2 animate-pulse rounded-md bg-surface-muted" />
+        <div className="h-24 animate-pulse rounded-xl bg-surface-muted" />
+        <div className="h-24 animate-pulse rounded-xl bg-surface-muted" />
+        <span className="sr-only">Loading event…</span>
+      </div>
+    );
+  }
+
   if (!event) {
     return (
       <div className="mx-auto max-w-md px-4 py-20 text-center">
@@ -59,12 +77,14 @@ export function ParticipantResponseView({ token }: { token: string }) {
         <p className="mt-2 text-sm text-muted-foreground">
           This link may be invalid or the event may have been closed.
         </p>
-        <Link
-          to="/"
-          className="mt-6 inline-flex items-center gap-1.5 text-sm text-primary underline-offset-4 hover:underline"
-        >
-          Go home
-        </Link>
+        {!embedded && (
+          <Link
+            to="/"
+            className="mt-6 inline-flex items-center gap-1.5 text-sm text-primary underline-offset-4 hover:underline"
+          >
+            Go home
+          </Link>
+        )}
       </div>
     );
   }
