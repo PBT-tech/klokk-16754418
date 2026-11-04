@@ -11,6 +11,7 @@ import { mapEvent } from "./klokk-mapping";
 import { sendSubmissionConfirmation } from "./klokk-email";
 import { participantCapForPlan } from "./klokk-limits";
 import { participantWarning } from "./klokk-warnings";
+import { frameAncestorHosts } from "./klokk-domains";
 import type { KlokkEvent, ParticipantResponse } from "./klokk-types";
 
 // Explicit columns only: never owner_id, billing or internal fields.
@@ -460,23 +461,13 @@ async function getEmbedFrameConfig(
     domainAllowlist?: string[];
     accentOverride?: string;
   };
-  const hosts = (settings.domainAllowlist ?? [])
-    .map((d) => d.trim().toLowerCase())
-    .filter((d) => /^(\*\.)?[a-z0-9.-]+(:\d+)?$/.test(d))
-    .flatMap((d) => {
-      // example.com and www.example.com are the same website to a visitor, so allow both.
-      // A *.example.com entry also covers example.com itself.
-      if (d.startsWith("*.")) return [d, d.slice(2)];
-      if (d.startsWith("www.")) return [d, d.slice(4)];
-      return d.split(".").length === 2 ? [d, `www.${d}`] : [d];
-    })
-    .map((d) => `https://${d}`);
+  const hosts = frameAncestorHosts(settings.domainAllowlist ?? []).map((h) => `https://${h}`);
   const accent =
     settings.accentOverride && /^#[0-9a-fA-F]{6}$/.test(settings.accentOverride)
       ? settings.accentOverride
       : null;
   // No allow-list means nobody may frame it: the organiser must opt in per domain.
-  return { frameAncestors: hosts.length > 0 ? [...new Set(hosts)].join(" ") : "'none'", accent };
+  return { frameAncestors: hosts.length > 0 ? hosts.join(" ") : "'none'", accent };
 }
 
 export const getEmbedConfig = createServerFn({ method: "GET" })
