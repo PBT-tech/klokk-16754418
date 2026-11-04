@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `profiles.email_verified` is now reconciled with Supabase Auth on the server when the account loads, because the `auth.users` trigger that did this is not available on this platform. Without it, people who verified their email stayed blocked from creating events.
+
 ### Security
 
 - Migration `20261104000000` attaches the profile protection triggers (`profiles_protect_privileged`, `on_auth_user_email_confirmed`) that were missing from the live database, so signed-in users can no longer edit their own plan, verified flag, event counter or billing fields.

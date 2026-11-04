@@ -75,6 +75,21 @@ export const getMyProfile = createServerFn({ method: "GET" })
       if (insErr) throw insErr;
       row = created;
     }
+    // email_verified is derived from Supabase Auth. There is no database trigger on
+    // auth.users for this (Cloud projects can't safely have one), so reconcile it here:
+    // if Auth says the address is confirmed but the profile does not yet, set it with the
+    // service role (the profile protection trigger blocks the user's own session).
+    if (row && !row.email_verified) {
+      const { data: authUser } = await supabase.auth.getUser();
+      if (authUser?.user?.id === userId && authUser.user.email_confirmed_at) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { error: syncErr } = await supabaseAdmin
+          .from("profiles")
+          .update({ email_verified: true })
+          .eq("id", userId);
+        if (!syncErr) row = { ...row, email_verified: true };
+      }
+    }
     const { data: usage } = await supabase
       .from("sms_usage")
       .select("*")
