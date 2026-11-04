@@ -6,6 +6,7 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  Code2,
   Copy,
   Mail,
   MessageSquare,
@@ -211,6 +212,18 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
             <Copy className="size-4" />
             Copy link
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const el = document.getElementById("embed");
+              el?.scrollIntoView({ behavior: "smooth", block: "start" });
+              el?.focus({ preventScroll: true });
+            }}
+          >
+            <Code2 className="size-4" />
+            Embed code
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowChat((s) => !s)}>
             <MessageSquare className="size-4" />
             Chat
@@ -381,8 +394,8 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
             </div>
           </section>
 
-          <section>
-            <SectionTitle>Embed</SectionTitle>
+          <section id="embed" tabIndex={-1} className="scroll-mt-6 outline-none">
+            <SectionTitle>Embed on a website</SectionTitle>
             <EmbedPanel event={event} account={account} />
           </section>
 

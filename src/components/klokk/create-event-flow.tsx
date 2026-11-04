@@ -7,6 +7,7 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  Code2,
   Copy,
   Link2,
   Plus,
@@ -28,6 +29,7 @@ import { uploadParticipantAvatar } from "@/lib/klokk-avatars";
 import { useCreateEvent } from "@/lib/klokk-hooks";
 import { toSlotLabel } from "@/lib/klokk-format";
 import { participantCapForPlan } from "@/lib/klokk-limits";
+import { EmbedPanel } from "@/components/klokk/embed-panel";
 import { PlanLimitsGuide } from "@/components/klokk/plan-limits-guide";
 import { VerifyEmailNotice } from "@/components/klokk/verify-email-notice";
 import type { KlokkAccount, KlokkEvent, KlokkPlanTier, NamedParticipant } from "@/lib/klokk-types";
@@ -59,7 +61,7 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
     }
   }, [step, draft, account.emailVerified]);
 
-  if (created) return <CreatedView event={created} />;
+  if (created) return <CreatedView event={created} account={account} />;
 
   const submit = async () => {
     if (!account.emailVerified) {
@@ -545,8 +547,9 @@ function ReviewBlock({ label, children }: { label: string; children: React.React
   );
 }
 
-function CreatedView({ event }: { event: KlokkEvent }) {
+function CreatedView({ event, account }: { event: KlokkEvent; account: KlokkAccount }) {
   const navigate = useNavigate();
+  const [showEmbed, setShowEmbed] = useState(false);
   const link = `${typeof window !== "undefined" ? window.location.origin : ""}/event/${event.token}`;
 
   const copy = () => {
@@ -567,7 +570,8 @@ function CreatedView({ event }: { event: KlokkEvent }) {
         Your event is ready
       </h1>
       <p className="mt-2 text-muted-foreground">
-        Share this link with your participants. No account needed for them.
+        Share this link with your participants, or put the event on your own website. No account
+        needed for them.
       </p>
       <div className="mt-8 flex items-center gap-2 rounded-xl border border-border bg-card p-3 shadow-premium">
         <Link2 className="ml-1 size-4 shrink-0 text-muted-foreground" />
@@ -580,6 +584,10 @@ function CreatedView({ event }: { event: KlokkEvent }) {
         </Button>
       </div>
       <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+        <Button variant="outline" onClick={() => setShowEmbed((v) => !v)} aria-expanded={showEmbed}>
+          <Code2 className="size-4" />
+          {showEmbed ? "Hide embed code" : "Embed on a website"}
+        </Button>
         <Button
           variant="outline"
           onClick={() => navigate({ to: "/event/$token", params: { token: event.token } })}
@@ -595,6 +603,11 @@ function CreatedView({ event }: { event: KlokkEvent }) {
           <ArrowRight className="size-4" />
         </Button>
       </div>
+      {showEmbed && (
+        <div className="mt-8 text-left">
+          <EmbedPanel event={event} account={account} />
+        </div>
+      )}
     </div>
   );
 }
