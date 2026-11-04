@@ -166,6 +166,15 @@ const slotSchema = z.object({
   startTime: z.string().max(5),
   endTime: z.string().max(5),
 });
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** time_slots.id is a global primary key: add a random part so identical times never collide. */
+function uniqueSlotId(s: { date: string; startTime: string; endTime: string }): string {
+  const rand = crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+  return `slot_${s.date}_${s.startTime.replace(":", "")}_${s.endTime.replace(":", "")}_${rand}`;
+}
 const namedSchema = z.object({
   id: z.string().max(64),
   firstName: z.string().max(100),
@@ -229,7 +238,9 @@ export const createMyEvent = createServerFn({ method: "POST" })
     if (data.slots.length > 0) {
       const { error: sErr } = await supabase.from("time_slots").insert(
         data.slots.map((s: TimeSlot) => ({
-          id: s.id,
+          // time_slots.id is unique across ALL events, so two organisers offering the same
+          // date and time would collide. Make every id unique.
+          id: uniqueSlotId(s),
           event_id: eventId,
           date: s.date,
           start_time: s.startTime,
@@ -444,6 +455,114 @@ export const updateMyEvent = createServerFn({ method: "POST" })
     }
 
     return event;
+  });
+
+/**
+ * Organiser edits an event's details and the time slots people can pick from.
+ * Text can be changed while the event is open. Slots can be added or removed until the
+ * event is confirmed, cancelled or closed; removing a slot also removes it from the
+ * answers of anyone who had picked it.
+ */
+export const editMyEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    z.object({
+      id: z.string().max(64),
+      title: z.string().trim().min(1).max(200),
+      description: z.string().max(2000),
+      location: z.string().max(300),
+      addSlots: z
+        .array(
+          z.object({
+            date: z.string().regex(DATE_RE),
+            startTime: z.string().regex(TIME_RE),
+            endTime: z.string().regex(TIME_RE),
+          }),
+        )
+        .max(200),
+      removeSlotIds: z.array(z.string().max(80)).max(200),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: ev, error: evErr } = await supabase
+      .from("events")
+      .select("id, status, time_slots ( id )")
+      .eq("id", data.id)
+      .eq("owner_id", userId)
+      .maybeSingle();
+    if (evErr) throw evErr;
+    if (!ev) throw new Error("Event not found");
+
+    const changingSlots = data.addSlots.length > 0 || data.removeSlotIds.length > 0;
+    if (changingSlots && ["confirmed", "cancelled", "closed"].includes(ev.status)) {
+      throw new Error(
+        "Time slots can't be changed once an event is confirmed, closed or cancelled.",
+      );
+    }
+    for (const a of data.addSlots) {
+      if (a.startTime >= a.endTime)
+        throw new Error("Each slot's start time must be before its end time.");
+    }
+
+    const existing = new Set(((ev.time_slots ?? []) as { id: string }[]).map((t) => t.id));
+    const toRemove = data.removeSlotIds.filter((id) => existing.has(id));
+    const finalCount = existing.size - toRemove.length + data.addSlots.length;
+    if (finalCount < 1) throw new Error("An event needs at least one time slot.");
+    if (finalCount > 200) throw new Error("An event can have at most 200 time slots.");
+
+    // Add before removing so a failure never leaves the event without slots.
+    if (data.addSlots.length > 0) {
+      const { error } = await supabase.from("time_slots").insert(
+        data.addSlots.map((a) => ({
+          id: uniqueSlotId(a),
+          event_id: ev.id,
+          date: a.date,
+          start_time: a.startTime,
+          end_time: a.endTime,
+        })),
+      );
+      if (error) throw error;
+    }
+    if (toRemove.length > 0) {
+      const { error } = await supabase
+        .from("time_slots")
+        .delete()
+        .eq("event_id", ev.id)
+        .in("id", toRemove);
+      if (error) throw error;
+      // Take the removed slots out of participants' answers. Participants can't be edited
+      // with the organiser's own session, so this uses the server-only key (ownership
+      // was verified above).
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: answers } = await supabaseAdmin
+        .from("participant_responses")
+        .select("id, slot_ids")
+        .eq("event_id", ev.id)
+        .overlaps("slot_ids", toRemove);
+      for (const r of answers ?? []) {
+        await supabaseAdmin
+          .from("participant_responses")
+          .update({
+            slot_ids: ((r.slot_ids ?? []) as string[]).filter((x) => !toRemove.includes(x)),
+          })
+          .eq("id", r.id);
+      }
+    }
+
+    const { data: row, error } = await supabase
+      .from("events")
+      .update({
+        title: data.title,
+        description: data.description.trim() || null,
+        location: data.location.trim() || null,
+      })
+      .eq("id", ev.id)
+      .eq("owner_id", userId)
+      .select(EVENT_SELECT)
+      .single();
+    if (error) throw error;
+    return mapEvent(row);
   });
 
 export const deleteMyEvent = createServerFn({ method: "POST" })
