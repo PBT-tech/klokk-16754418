@@ -80,14 +80,22 @@ export function useEventById(id: string | undefined): KlokkEvent | undefined {
   return data ?? undefined;
 }
 
-export function useEventByToken(token: string | undefined): KlokkEvent | undefined {
+export function useEventByTokenState(token: string | undefined): {
+  event: KlokkEvent | undefined;
+  /** true until the first answer (found or not) has come back */
+  loading: boolean;
+} {
   const fn = useServerFn(getPublicEvent);
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["klokk-public-event", token],
     queryFn: () => fn({ data: { token: token! } }),
     enabled: !!token,
   });
-  return data ?? undefined;
+  return { event: data ?? undefined, loading: !!token && isLoading };
+}
+
+export function useEventByToken(token: string | undefined): KlokkEvent | undefined {
+  return useEventByTokenState(token).event;
 }
 
 /** F4: the participant's own earlier answer, looked up by token + email. */

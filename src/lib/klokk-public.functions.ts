@@ -142,13 +142,12 @@ export const getPublicEvent = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { eventToken, embedId } = await resolveToken(data.token);
     const viewIp = await clientIp();
-    if (viewIp !== "unknown") await rateLimit(`view:${viewIp}`, 240, 60);
     const client = await admin();
-    const { data: row, error } = await client
-      .from("events")
-      .select(PUBLIC_EVENT_SELECT)
-      .eq("token", eventToken)
-      .maybeSingle();
+    // The rate-limit check and the event lookup are independent: run them together.
+    const [, { data: row, error }] = await Promise.all([
+      viewIp !== "unknown" ? rateLimit(`view:${viewIp}`, 240, 60) : Promise.resolve(),
+      client.from("events").select(PUBLIC_EVENT_SELECT).eq("token", eventToken).maybeSingle(),
+    ]);
     if (error) throw error;
     if (!row) return null;
     await recordEmbedEvent(embedId, "view");
