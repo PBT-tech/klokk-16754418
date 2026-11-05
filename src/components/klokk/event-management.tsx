@@ -22,6 +22,7 @@ import { StatusBadge } from "@/components/klokk/status-badge";
 import { AvailabilityHeatMap, bestSlot } from "@/components/klokk/heat-map";
 import { EventChat } from "@/components/klokk/event-chat";
 import { EmbedPanel } from "@/components/klokk/embed-panel";
+import { EditEventDialog } from "@/components/klokk/edit-event-dialog";
 import { Avatar } from "@/components/klokk/avatar";
 import {
   useUpdateEvent,
@@ -208,6 +209,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
           )}
         </div>
         <div className="flex flex-wrap gap-2">
+          {status !== "cancelled" && <EditEventDialog event={event} />}
           <Button variant="outline" size="sm" onClick={copyLink}>
             <Copy className="size-4" />
             Copy link

@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Editing an event emails every participant (and the organiser, as a copy) a list of exactly what changed. Needs the "Klokk Event Updated" HighLevel workflow.
+
+- Organisers can edit an event's title, description, location and time slots from the event page. Removing a slot that people picked asks for confirmation first and takes it out of their answers.
+
 - Create-event time step explains how to offer several times on one date, with AM/PM dropdowns and times grouped by date.
 - "Embed on a website" button on the event-created screen and an "Embed code" button on the event page.
 
@@ -36,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+
+- Two organisers offering the same date and time no longer collide: time slot ids are now unique across all events.
 
 - `profiles.email_verified` is now reconciled with Supabase Auth on the server when the account loads, because the `auth.users` trigger that did this is not available on this platform. Without it, people who verified their email stayed blocked from creating events.
 

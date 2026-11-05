@@ -20,6 +20,10 @@ const CF = {
   confirmedTime: "TqQZz1icLo4ZgVxyvoex",
   location: "XTwVtYzAxKIeTSmbxNdC",
   eventDescription: "pRn1lQsay3AmlpQewGEW",
+  // "What changed" text for the event-updated email. Set HL_CF_EVENT_CHANGES to the id of the
+  // matching HighLevel custom field; without it the text is sent under the plain key below.
+  changes:
+    (typeof process !== "undefined" && process.env?.["HL_CF_EVENT_CHANGES"]) || "event_changes",
 };
 
 type NotificationType =
@@ -28,6 +32,7 @@ type NotificationType =
   | "reminder"
   | "meeting_confirmation"
   | "event_cancelled"
+  | "event_updated"
   | "signup_notification";
 
 const FORM_IDS: Record<NotificationType, string> = {
@@ -36,6 +41,7 @@ const FORM_IDS: Record<NotificationType, string> = {
   reminder: "klokk-response-reminder",
   meeting_confirmation: "klokk-meeting-confirmation",
   event_cancelled: "klokk-event-cancelled",
+  event_updated: "klokk-event-updated",
   signup_notification: "klokk-signup-notification",
 };
 
@@ -45,6 +51,7 @@ const FORM_NAMES: Record<NotificationType, string> = {
   reminder: "Klokk Response Reminder",
   meeting_confirmation: "Klokk Meeting Confirmation",
   event_cancelled: "Klokk Event Cancelled",
+  event_updated: "Klokk Event Updated",
   signup_notification: "Klokk Signup Notification",
 };
 
@@ -179,6 +186,17 @@ export function sendMeetingConfirmation(p: EventPayload) {
 /** F9: cancellation notice to participants. */
 export function sendCancellation(p: EventPayload) {
   return postEvent("event_cancelled", p, eventCustomFields(p.event, p.organiserName, p.origin));
+}
+
+/** The organiser changed the event: tell the recipient exactly what is different. */
+export function sendEventUpdated(p: EventPayload & { changes: string }) {
+  return postEvent(
+    "event_updated",
+    p,
+    eventCustomFields(p.event, p.organiserName, p.origin, {
+      [CF.changes]: { value: p.changes, label: "What Changed" },
+    }),
+  );
 }
 
 /** Notify the sub-account owner that a new organiser signed up.

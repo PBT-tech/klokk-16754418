@@ -14,6 +14,7 @@ import {
   getMyEvent,
   createMyEvent,
   updateMyEvent,
+  editMyEvent,
   deleteMyEvent,
   addChatMessageFn,
   togglePinFn,
@@ -121,6 +122,19 @@ export function useUpdateEvent() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["klokk-events"] });
       qc.invalidateQueries({ queryKey: ["klokk-event"] });
+    },
+  });
+}
+
+export function useEditEvent() {
+  const qc = useQueryClient();
+  const fn = useServerFn(editMyEvent);
+  return useMutation({
+    mutationFn: (input: any) => fn({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["klokk-events"] });
+      qc.invalidateQueries({ queryKey: ["klokk-event"] });
+      qc.invalidateQueries({ queryKey: ["klokk-public-event"] });
     },
   });
 }
