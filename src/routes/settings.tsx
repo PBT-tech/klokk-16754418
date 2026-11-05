@@ -6,6 +6,7 @@ import {
   CreditCard,
   Globe,
   Mail,
+  Plug,
   RefreshCw,
   Shield,
   Trash2,
@@ -26,7 +27,12 @@ import {
 } from "@/components/ui/dialog";
 import { PaymentCheckoutBlock } from "@/integrations/payments";
 import { AvatarUpload, Avatar } from "@/components/klokk/avatar";
-import { BillingTab, EmbedTab } from "@/components/klokk/settings-panels";
+import {
+  BillingTab,
+  EmbedTab,
+  IntegrationsTab,
+  MarketingConsentCard,
+} from "@/components/klokk/settings-panels";
 import {
   useCurrentAccount,
   useSession,
@@ -53,7 +59,7 @@ export const Route = createFileRoute("/settings")({
   component: Settings,
 });
 
-type Tab = "account" | "billing" | "embed" | "notifications";
+type Tab = "account" | "billing" | "embed" | "integrations" | "notifications";
 
 function Settings() {
   const session = useSession();
@@ -62,7 +68,9 @@ function Settings() {
   const [tab, setTab] = useState<Tab>(() => {
     if (typeof window === "undefined") return "account";
     const t = new URLSearchParams(window.location.search).get("tab");
-    return t === "billing" || t === "embed" || t === "notifications" ? t : "account";
+    return t === "billing" || t === "embed" || t === "integrations" || t === "notifications"
+      ? t
+      : "account";
   });
 
   useEffect(() => {
@@ -81,6 +89,7 @@ function Settings() {
     { id: "account", label: "Account", icon: <Shield className="size-4" /> },
     { id: "billing", label: "Plan & billing", icon: <CreditCard className="size-4" /> },
     { id: "embed", label: "Embed", icon: <Globe className="size-4" /> },
+    { id: "integrations", label: "Integrations", icon: <Plug className="size-4" /> },
     { id: "notifications", label: "Notifications", icon: <Bell className="size-4" /> },
   ];
 
@@ -113,6 +122,7 @@ function Settings() {
         {tab === "account" && <AccountTab account={account} />}
         {tab === "billing" && <BillingTab />}
         {tab === "embed" && <EmbedTab account={account} />}
+        {tab === "integrations" && <IntegrationsTab />}
         {tab === "notifications" && <NotificationsTab account={account} />}
       </div>
     </div>
@@ -465,6 +475,7 @@ function NotificationsTab({
 
   return (
     <div className="space-y-6">
+      <MarketingConsentCard account={account} />
       <Card>
         <CardHeader
           title="Notification preferences"

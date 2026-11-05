@@ -18,7 +18,7 @@ function Page() {
       </Link>
       <h1 className="mt-6 font-display text-3xl font-semibold text-foreground">Terms of Use</h1>
       <p className="mt-2 text-xs text-muted-foreground">
-        Draft for legal review · Last updated 2 November 2026
+        Draft for legal review · Last updated 5 November 2026
       </p>
       <div className="mt-8 space-y-4 text-sm leading-relaxed text-muted-foreground">
         <p>
@@ -42,6 +42,18 @@ function Page() {
         <p>
           Event data is deleted automatically according to the retention periods in our Privacy
           Policy. Deletion cannot be undone, so keep your own record of anything you need.
+        </p>
+        <h2 className="pt-2 font-display text-lg font-semibold text-foreground">
+          Contacting participants
+        </h2>
+        <p>
+          When a participant responds to an event they may tick optional boxes that allow Klokk, and
+          the organiser, to contact them about other events, marketing, newsletters and similar.
+          Only participants who tick a box may be added to the related customer system. Organisers
+          on a paid monthly plan can connect their own HighLevel account so consenting participants
+          are added to it. By connecting, the organiser agrees to use those details lawfully, to
+          honour unsubscribe and withdrawal requests, and to comply with the Spam Act 2001 and any
+          other privacy and marketing law that applies to them.
         </p>
         <h2 className="pt-2 font-display text-lg font-semibold text-foreground">Ownership</h2>
         <p>

@@ -8,6 +8,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthSession, initAuth, subscribeAuth } from "./klokk-auth";
 import {
+  getCrmStatus,
+  updateMarketingConsent,
+  listConsentedContacts,
+  connectHighLevel,
+  disconnectCrm,
   getMyProfile,
   updateMyProfile,
   getMyEvents,
@@ -325,4 +330,41 @@ export function useTheme() {
   }, [theme, setTheme]);
 
   return { theme, setTheme, toggle };
+}
+
+export function useCrmStatus() {
+  const fn = useServerFn(getCrmStatus);
+  return useQuery({ queryKey: ["klokk-crm"], queryFn: () => fn() });
+}
+
+export function useConnectHighLevel() {
+  const qc = useQueryClient();
+  const fn = useServerFn(connectHighLevel);
+  return useMutation({
+    mutationFn: (input: { locationId: string; token: string }) => fn({ data: input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["klokk-crm"] }),
+  });
+}
+
+export function useDisconnectCrm() {
+  const qc = useQueryClient();
+  const fn = useServerFn(disconnectCrm);
+  return useMutation({
+    mutationFn: async () => (fn as () => Promise<unknown>)(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["klokk-crm"] }),
+  });
+}
+
+export function useConsentedContacts() {
+  const fn = useServerFn(listConsentedContacts);
+  return useQuery({ queryKey: ["klokk-consented"], queryFn: () => fn() });
+}
+
+export function useUpdateMarketingConsent() {
+  const qc = useQueryClient();
+  const fn = useServerFn(updateMarketingConsent);
+  return useMutation({
+    mutationFn: (input: { consent: boolean }) => fn({ data: input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["klokk-profile"] }),
+  });
 }

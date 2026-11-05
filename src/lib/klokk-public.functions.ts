@@ -8,7 +8,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { mapEvent } from "./klokk-mapping";
-import { sendSubmissionConfirmation } from "./klokk-email";
+import { sendSubmissionConfirmation, sendKlokkMarketingChoice } from "./klokk-email";
+
+/** Bump when the wording of the two consent tick boxes changes. */
+const CONSENT_VERSION = "2026-11-05";
 import { participantCapForPlan } from "./klokk-limits";
 import { participantWarning } from "./klokk-warnings";
 import { frameAncestorHosts } from "./klokk-domains";
@@ -16,7 +19,7 @@ import type { KlokkEvent, ParticipantResponse } from "./klokk-types";
 
 // Explicit columns only: never owner_id, billing or internal fields.
 const PUBLIC_EVENT_SELECT = `
-  id, token, title, description, location, participation_mode, minimum_count, deadline, status,
+  id, owner_id, token, title, description, location, participation_mode, minimum_count, deadline, status,
   confirmed_slot_id, confirmed_custom_date, confirmed_custom_start, confirmed_custom_end,
   confirmed_at, created_at, closed_at,
   time_slots ( id, date, start_time, end_time ),
@@ -117,10 +120,12 @@ async function recordEmbedEvent(embedId: string | null, kind: "view" | "interact
 }
 
 /** Strip anything a participant must not see about other people. */
-function toPublicEvent(row: any, embedded: boolean): KlokkEvent {
+function toPublicEvent(row: any, embedded: boolean, organiserContactOption: boolean): KlokkEvent {
   const event = mapEvent({ ...row, owner_id: "", chat_messages: [] });
   return {
     ...event,
+    // Whether to show the "organiser may contact me" tick box (never exposes who or where).
+    organiserContactOption,
     // Embed viewers must never learn the event's secret link token.
     token: embedded ? "" : event.token,
     // Named participants: names only, never emails.
@@ -151,7 +156,24 @@ export const getPublicEvent = createServerFn({ method: "GET" })
     if (error) throw error;
     if (!row) return null;
     await recordEmbedEvent(embedId, "view");
-    return toPublicEvent(row, embedId !== null);
+    // The organiser tick box appears on every monthly plan. Consent is always recorded and
+    // shown in the organiser's dashboard; it is also pushed to their CRM if one is connected.
+    let organiserContactOption = false;
+    try {
+      const ownerId = (row as any).owner_id as string | undefined;
+      if (ownerId) {
+        const { data: prof } = await client
+          .from("profiles")
+          .select("plan")
+          .eq("id", ownerId)
+          .maybeSingle();
+        const { planHasCrm } = await import("./klokk-crm.server");
+        organiserContactOption = planHasCrm(prof?.plan);
+      }
+    } catch {
+      /* the tick box simply stays hidden */
+    }
+    return toPublicEvent(row, embedId !== null, organiserContactOption);
   });
 
 /**
@@ -180,13 +202,17 @@ export const lookupMyResponse = createServerFn({ method: "POST" })
     if (!event) return null;
     const { data: row } = await client
       .from("participant_responses")
-      .select("slot_ids, edit_token_hash")
+      .select("slot_ids, edit_token_hash, klokk_marketing_consent, organiser_marketing_consent")
       .eq("event_id", event.id)
       .eq("email", data.email.trim().toLowerCase())
       .maybeSingle();
     if (!row || !row.edit_token_hash) return null;
     if (row.edit_token_hash !== (await sha256Hex(data.editToken))) return null;
-    return { slotIds: (row.slot_ids ?? []) as string[] };
+    return {
+      slotIds: (row.slot_ids ?? []) as string[],
+      klokkConsent: row.klokk_marketing_consent === true,
+      organiserConsent: row.organiser_marketing_consent === true,
+    };
   });
 
 export const submitResponse = createServerFn({ method: "POST" })
@@ -204,6 +230,10 @@ export const submitResponse = createServerFn({ method: "POST" })
       slotIds: z.array(z.string()).min(1).max(500),
       notes: z.string().max(1000).optional(),
       avatarUrl: z.string().max(2000).optional(),
+      /** Tick box 1: Klokk may contact me about Klokk. Unticked by default. */
+      klokkConsent: z.boolean().default(false),
+      /** Tick box 2: the organiser may contact me (other events, marketing, newsletters). */
+      organiserConsent: z.boolean().default(false),
       /** private code from this browser's earlier submission, needed to change a response */
       editToken: z.string().min(20).max(100).optional(),
     }),
@@ -248,7 +278,7 @@ export const submitResponse = createServerFn({ method: "POST" })
     const cap = participantCapForPlan(owner?.plan);
     const { data: existing } = await client
       .from("participant_responses")
-      .select("id, edit_token_hash")
+      .select("id, edit_token_hash, klokk_marketing_consent, organiser_marketing_consent")
       .eq("event_id", event.id)
       .eq("email", email)
       .maybeSingle();
@@ -297,13 +327,65 @@ export const submitResponse = createServerFn({ method: "POST" })
     };
     const newPhone = data.phone || null;
     const newNotes = data.notes?.trim() || null;
+    // The tick boxes are authoritative on every submission, so ticking again or unticking
+    // (withdrawing) both work. The time is only restamped when a consent changes.
+    const consentChanged =
+      !existing ||
+      existing.klokk_marketing_consent !== data.klokkConsent ||
+      existing.organiser_marketing_consent !== data.organiserConsent;
+    payload["klokk_marketing_consent"] = data.klokkConsent;
+    payload["organiser_marketing_consent"] = data.organiserConsent;
+    if (consentChanged) {
+      payload["consent_recorded_at"] = new Date().toISOString();
+      payload["consent_version"] = CONSENT_VERSION;
+    }
     if (!existing || newPhone) payload["phone"] = newPhone;
     if (!existing || newNotes) payload["notes"] = newNotes;
     if (!existing || avatarUrl) payload["avatar_url"] = avatarUrl;
-    const { error } = await client
+    const { data: saved, error } = await client
       .from("participant_responses")
-      .upsert(payload, { onConflict: "event_id,email" });
+      .upsert(payload, { onConflict: "event_id,email" })
+      .select("id")
+      .maybeSingle();
     if (error) throw error;
+
+    // Consent-gated CRM delivery. People who never ticked a box are never sent anywhere.
+    // A change in either direction is sent: ticking adds mktg-consent=yes, unticking
+    // (withdrawal) sends the opt-out so the tag becomes mktg-consent=no. An edit that leaves
+    // a box as it was sends nothing. Best-effort: a CRM problem never blocks the participant.
+    try {
+      const wasKlokk = existing?.klokk_marketing_consent === true;
+      if (data.klokkConsent !== wasKlokk) {
+        await sendKlokkMarketingChoice(
+          {
+            recipientEmail: email,
+            recipientFirstName: data.firstName.trim(),
+            recipientLastName: data.lastName.trim(),
+          },
+          data.klokkConsent,
+        );
+      }
+      const wasOrganiser = existing?.organiser_marketing_consent === true;
+      if (data.organiserConsent !== wasOrganiser) {
+        const { pushParticipantToCrm } = await import("./klokk-crm.server");
+        await pushParticipantToCrm({
+          ownerId: event.owner_id,
+          ownerPlan: owner?.plan,
+          responseId: (saved?.id as string | undefined) ?? null,
+          eventId: event.id,
+          consent: data.organiserConsent,
+          participant: {
+            firstName: data.firstName.trim(),
+            lastName: data.lastName.trim(),
+            email,
+            phone: newPhone,
+            eventTitle: event.title,
+          },
+        });
+      }
+    } catch {
+      /* CRM delivery is best-effort */
+    }
 
     await recordEmbedEvent(embedId, "submit");
 
