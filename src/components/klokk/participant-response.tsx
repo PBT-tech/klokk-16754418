@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { KlokkLogo } from "@/components/klokk/logo";
 import { AvatarUpload, Avatar } from "@/components/klokk/avatar";
 import { useEventByTokenState, useMyResponse, useSubmitResponse } from "@/lib/klokk-hooks";
@@ -18,7 +19,23 @@ import {
 } from "@/lib/klokk-format";
 import { uploadParticipantAvatar } from "@/lib/klokk-avatars";
 import { getEditToken, setEditToken } from "@/lib/klokk-edit-token";
-import { buildTrackingPayload, postTrackingEvent } from "@/lib/klokk-tracking";
+
+const CONSENT_KEY = "klokk-consent";
+function readSavedConsent(): { klokk: boolean; organiser: boolean } {
+  try {
+    const v = JSON.parse(localStorage.getItem(CONSENT_KEY) ?? "{}") as Record<string, unknown>;
+    return { klokk: v["klokk"] === true, organiser: v["organiser"] === true };
+  } catch {
+    return { klokk: false, organiser: false };
+  }
+}
+function saveConsent(klokk: boolean, organiser: boolean) {
+  try {
+    localStorage.setItem(CONSENT_KEY, JSON.stringify({ klokk, organiser }));
+  } catch {
+    /* storage unavailable */
+  }
+}
 
 /**
  * The participant response screen. `token` is the event's secret link token, or an
@@ -36,6 +53,11 @@ export function ParticipantResponseView({ token }: { token: string }) {
   const [phone, setPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const [notes, setNotes] = useState("");
+  // Both unticked by default. Only people who tick are added to a CRM.
+  // Start from what this browser last chose (so a returning participant sees their earlier
+  // answer), and fall back to unticked.
+  const [klokkConsent, setKlokkConsent] = useState(() => readSavedConsent().klokk);
+  const [organiserConsent, setOrganiserConsent] = useState(() => readSavedConsent().organiser);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [submitted, setSubmitted] = useState(false);
 
@@ -46,6 +68,8 @@ export function ParticipantResponseView({ token }: { token: string }) {
   useEffect(() => {
     if (!prior) return;
     if (selected.size === 0 && prior.slotIds.length > 0) setSelected(new Set(prior.slotIds));
+    setKlokkConsent(prior.klokkConsent);
+    setOrganiserConsent(prior.organiserConsent);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prior]);
 
@@ -162,8 +186,11 @@ export function ParticipantResponseView({ token }: { token: string }) {
         slotIds: [...selected],
         avatarUrl,
         notes: notes.trim() || undefined,
+        klokkConsent,
+        organiserConsent: event.organiserContactOption ? organiserConsent : false,
       });
       setSubmitted(true);
+      saveConsent(klokkConsent, organiserConsent);
       if (result?.editToken) setEditToken(token, email, result.editToken);
       try {
         sessionStorage.setItem(
@@ -174,28 +201,6 @@ export function ParticipantResponseView({ token }: { token: string }) {
         /* storage unavailable — confirmation page falls back to generic text */
       }
       toast.success("Availability submitted");
-
-      // Fire-and-forget CRM tracking — never blocks the participant flow.
-      try {
-        postTrackingEvent(
-          buildTrackingPayload(
-            "klokk-participant-response",
-            "Klokk Participant Response",
-            {
-              first_name: firstName.trim(),
-              last_name: lastName.trim(),
-              email: email.trim(),
-            },
-            {
-              first_name: "First name",
-              last_name: "Last name",
-              email: "Email",
-            },
-          ),
-        );
-      } catch {
-        /* tracking is best-effort */
-      }
 
       if (!embedded) {
         navigate({
@@ -375,6 +380,41 @@ export function ParticipantResponseView({ token }: { token: string }) {
                 Organisers see any notes alongside your chosen dates and times.
               </p>
             </div>
+
+            <fieldset className="space-y-3 rounded-xl border border-border bg-background p-4">
+              <legend className="px-1 text-xs font-semibold text-card-foreground">
+                Stay in touch (optional)
+              </legend>
+              <label className="flex cursor-pointer items-start gap-3 text-xs text-muted-foreground">
+                <Checkbox
+                  checked={klokkConsent}
+                  onCheckedChange={(v) => setKlokkConsent(v === true)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Klokk (Pegasus Apps) may contact me about Klokk and how it can help in my life and
+                  business, such as news, tips and offers. I can unsubscribe at any time.
+                </span>
+              </label>
+              {event.organiserContactOption && (
+                <label className="flex cursor-pointer items-start gap-3 text-xs text-muted-foreground">
+                  <Checkbox
+                    checked={organiserConsent}
+                    onCheckedChange={(v) => setOrganiserConsent(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    The organiser of this event may contact me about other events, marketing,
+                    newsletters and similar, and may keep my details in their own customer system. I
+                    can unsubscribe at any time.
+                  </span>
+                </label>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Leaving these unticked does not affect your response. You will still get the emails
+                about this meeting.
+              </p>
+            </fieldset>
 
             <p className="text-xs text-muted-foreground">
               By submitting, you agree your name and email will be used to coordinate this meeting

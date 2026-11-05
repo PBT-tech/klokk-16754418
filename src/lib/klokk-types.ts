@@ -67,6 +67,8 @@ export interface KlokkEvent {
   confirmedAt?: string;
   createdAt: string; // ISO
   closedAt?: string;
+  /** Public view only: show the "organiser may contact me" tick box. */
+  organiserContactOption?: boolean;
 }
 
 export type KlokkPlanTier = "free" | "casual" | "organiser" | "teams";
@@ -86,6 +88,8 @@ export interface KlokkAccount {
   smsUsageLog: SmsUsageEntry[];
   notificationPrefs: NotificationPrefs;
   embedSettings: EmbedSettings;
+  /** Klokk may contact this organiser about Klokk (chosen at sign-up, changeable in Settings). */
+  marketingConsent: boolean;
 }
 
 export interface SmsUsageEntry {

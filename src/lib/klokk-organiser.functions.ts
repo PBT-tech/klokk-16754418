@@ -71,6 +71,10 @@ export const getMyProfile = createServerFn({ method: "GET" })
           first_name: String(user?.user?.user_metadata?.["first_name"] ?? "").slice(0, 100),
           last_name: String(user?.user?.user_metadata?.["last_name"] ?? "").slice(0, 100),
           email_verified: !!user?.user?.email_confirmed_at,
+          ...({
+            marketing_consent: user?.user?.user_metadata?.["marketing_consent"] === true,
+            marketing_consent_at: user?.user?.user_metadata?.["marketing_consent_at"] ?? null,
+          } as any),
         })
         .select("*")
         .single();
@@ -1048,4 +1052,181 @@ export const revokeEmbed = createServerFn({ method: "POST" })
       .eq("owner_id", userId);
     if (error) throw error;
     return { ok: true };
+  });
+
+// ---------- organiser CRM connection (Phase 1.2, HighLevel first) ----------
+// crm_connections is closed to the browser; these functions use the service role after
+// confirming who is signed in and that their plan includes the connection.
+
+async function crmAdmin(): Promise<any> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
+async function requireCrmPlan(supabase: any, userId: string): Promise<void> {
+  const { data: p } = await supabase.from("profiles").select("plan").eq("id", userId).maybeSingle();
+  const { planHasCrm } = await import("./klokk-crm.server");
+  if (!planHasCrm(p?.plan)) {
+    throw new Error("Connecting your CRM is included with the Organiser and Teams monthly plans.");
+  }
+}
+
+export const getCrmStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", userId)
+      .maybeSingle();
+    const { planHasCrm } = await import("./klokk-crm.server");
+    const db = await crmAdmin();
+    const { data: conn } = await db
+      .from("crm_connections")
+      .select("provider, external_account_id, status, last_error, last_success_at")
+      .eq("user_id", userId)
+      .eq("provider", "highlevel")
+      .maybeSingle();
+    const { data: log } = await db
+      .from("crm_sync_log")
+      .select("status, error, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    return {
+      available: planHasCrm(p?.plan),
+      connection: conn
+        ? {
+            provider: conn.provider as string,
+            locationId: conn.external_account_id as string,
+            status: conn.status as "active" | "error",
+            lastError: (conn.last_error as string | null) ?? null,
+            lastSuccessAt: (conn.last_success_at as string | null) ?? null,
+          }
+        : null,
+      recent: ((log ?? []) as any[]).map((l) => ({
+        status: l.status as "ok" | "failed",
+        error: (l.error as string | null) ?? null,
+        at: l.created_at as string,
+      })),
+    };
+  });
+
+export const connectHighLevel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    z.object({
+      locationId: z
+        .string()
+        .trim()
+        .regex(/^[A-Za-z0-9]{10,40}$/, "That Location ID does not look right"),
+      token: z.string().trim().min(20).max(500),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await requireCrmPlan(supabase, userId);
+    const { verifyHighLevel, encryptSecret } = await import("./klokk-crm.server");
+    await verifyHighLevel(data.locationId, data.token);
+    const db = await crmAdmin();
+    const { error } = await db.from("crm_connections").upsert(
+      {
+        user_id: userId,
+        provider: "highlevel",
+        external_account_id: data.locationId,
+        token_ciphertext: await encryptSecret(data.token),
+        status: "active",
+        last_error: null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,provider" },
+    );
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const disconnectCrm = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const db = await crmAdmin();
+    const { error } = await db
+      .from("crm_connections")
+      .delete()
+      .eq("user_id", context.userId)
+      .eq("provider", "highlevel");
+    if (error) throw error;
+    return { ok: true };
+  });
+
+// ---------- consent dashboard ----------
+// Everyone who ticked "the organiser may contact me" on any of this organiser's events.
+export const listConsentedContacts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", userId)
+      .maybeSingle();
+    const { planHasCrm } = await import("./klokk-crm.server");
+    if (!planHasCrm(p?.plan)) return { available: false, total: 0, contacts: [] };
+    const db = await crmAdmin();
+    const { data: ev } = await db.from("events").select("id, title").eq("owner_id", userId);
+    const titles = new Map<string, string>(((ev ?? []) as any[]).map((e) => [e.id, e.title]));
+    if (titles.size === 0) return { available: true, total: 0, contacts: [] };
+    const { data: rows, error } = await db
+      .from("participant_responses")
+      .select("first_name, last_name, email, phone, event_id, consent_recorded_at")
+      .in("event_id", [...titles.keys()])
+      .eq("organiser_marketing_consent", true)
+      .order("consent_recorded_at", { ascending: false })
+      .limit(5000);
+    if (error) throw error;
+    const contacts = ((rows ?? []) as any[]).map((r) => ({
+      name: `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim(),
+      email: r.email as string,
+      phone: (r.phone as string | null) ?? null,
+      eventTitle: titles.get(r.event_id) ?? "",
+      consentedAt: (r.consent_recorded_at as string | null) ?? null,
+    }));
+    return { available: true, total: contacts.length, contacts };
+  });
+
+// ---------- organiser marketing consent (opt in or out of Klokk contact) ----------
+export const updateMarketingConsent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ consent: z.boolean() }))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: p } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+    if (!p) throw new Error("Profile not found");
+    const was = (p as any).marketing_consent === true;
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        marketing_consent: data.consent,
+        marketing_consent_at: new Date().toISOString(),
+        marketing_consent_version: "2026-11-05",
+      } as any)
+      .eq("id", userId);
+    if (error) throw error;
+    if (data.consent !== was && p.email) {
+      try {
+        const { sendKlokkMarketingChoice } = await import("./klokk-email");
+        await sendKlokkMarketingChoice(
+          {
+            recipientEmail: p.email,
+            recipientFirstName: p.first_name ?? "",
+            recipientLastName: p.last_name ?? "",
+          },
+          data.consent,
+          "organiser",
+        );
+      } catch {
+        /* CRM delivery is best-effort */
+      }
+    }
+    return { ok: true, consent: data.consent };
   });

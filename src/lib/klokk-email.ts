@@ -33,7 +33,9 @@ type NotificationType =
   | "meeting_confirmation"
   | "event_cancelled"
   | "event_updated"
-  | "signup_notification";
+  | "signup_notification"
+  | "klokk_marketing_optin"
+  | "klokk_marketing_optout";
 
 const FORM_IDS: Record<NotificationType, string> = {
   invitation: "klokk-event-invitation",
@@ -43,6 +45,10 @@ const FORM_IDS: Record<NotificationType, string> = {
   event_cancelled: "klokk-event-cancelled",
   event_updated: "klokk-event-updated",
   signup_notification: "klokk-signup-notification",
+  // Same form id the participant-response workflow already listens to ("contact capture").
+  klokk_marketing_optin: "klokk-participant-response",
+  // Withdrawal: the automation on this form id should remove mktg-consent=yes and add mktg-consent=no.
+  klokk_marketing_optout: "klokk-marketing-optout",
 };
 
 const FORM_NAMES: Record<NotificationType, string> = {
@@ -53,6 +59,8 @@ const FORM_NAMES: Record<NotificationType, string> = {
   event_cancelled: "Klokk Event Cancelled",
   event_updated: "Klokk Event Updated",
   signup_notification: "Klokk Signup Notification",
+  klokk_marketing_optin: "Klokk Participant Response",
+  klokk_marketing_optout: "Klokk Marketing Opt-out",
 };
 
 interface BasePayload {
@@ -216,4 +224,23 @@ export function sendSignupNotification(p: { newOrganiserEmail: string; newOrgani
       [CF.eventTitle]: { value: p.newOrganiserEmail, label: "New Organiser Email" },
     },
   );
+}
+
+/**
+ * A participant changed their "Klokk may contact me" choice. Ticked posts the participant-response
+ * form; unticked (withdrawal) posts the opt-out form. Both carry the same readable fields so the
+ * HighLevel automation can set mktg-consent=yes or mktg-consent=no and tell participants from
+ * organisers by contact_role. People who never ticked the box are never sent here.
+ */
+export function sendKlokkMarketingChoice(
+  p: BasePayload,
+  consent: boolean,
+  role: "participant" | "organiser" = "participant",
+) {
+  return postEvent(consent ? "klokk_marketing_optin" : "klokk_marketing_optout", p, {
+    mktg_consent: { value: consent ? "yes" : "no", label: "Marketing consent" },
+    // Maps to the contact's Type field in HighLevel ({{contact.type}}).
+    type: { value: role, label: "Type" },
+    consent_date: { value: new Date().toISOString(), label: "Consent date" },
+  });
 }

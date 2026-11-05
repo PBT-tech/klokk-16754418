@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PaymentCheckoutBlock } from "@/integrations/payments";
-import { useBilling, useClaimOrder, useUpdateEmbedSettings } from "@/lib/klokk-hooks";
+import {
+  useBilling,
+  useClaimOrder,
+  useConnectHighLevel,
+  useConsentedContacts,
+  useCrmStatus,
+  useDisconnectCrm,
+  useUpdateEmbedSettings,
+  useUpdateMarketingConsent,
+} from "@/lib/klokk-hooks";
 import { FREE_LIFETIME_EVENTS } from "@/lib/klokk-limits";
 import { eventsWarning } from "@/lib/klokk-warnings";
 import { LimitBanner } from "@/components/klokk/limit-banner";
@@ -468,5 +478,242 @@ export function EmbedTab({ account }: { account: KlokkAccount }) {
         Save embed settings
       </Button>
     </div>
+  );
+}
+
+function csvCell(v: string): string {
+  // Quote, and neutralise spreadsheet formulas (CSV injection).
+  const safe = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
+  return `"${safe.replace(/"/g, '""')}"`;
+}
+
+function ConsentedContactsCard() {
+  const q = useConsentedContacts();
+  const d = q.data;
+  if (!d?.available) return null;
+  const download = () => {
+    const lines = [
+      ["Name", "Email", "Mobile", "Event", "Agreed on"].map(csvCell).join(","),
+      ...d.contacts.map((c) =>
+        [c.name, c.email, c.phone ?? "", c.eventTitle, c.consentedAt ?? ""].map(csvCell).join(","),
+      ),
+    ];
+    const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "klokk-contacts-who-agreed.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  return (
+    <Card
+      title="People who agreed to hear from you"
+      subtitle="Participants who ticked the box saying you may contact them. Only they may be contacted."
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-card-foreground">
+          <span className="font-display text-2xl font-semibold">{d.total}</span>{" "}
+          {d.total === 1 ? "person" : "people"}
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={download}
+          disabled={d.total === 0}
+        >
+          Download CSV
+        </Button>
+      </div>
+      {d.contacts.length > 0 && (
+        <div className="mt-4 max-h-80 overflow-auto rounded-xl border border-border">
+          <table className="w-full text-left text-xs">
+            <thead className="sticky top-0 bg-surface-muted text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2 font-medium">Name</th>
+                <th className="px-3 py-2 font-medium">Email</th>
+                <th className="px-3 py-2 font-medium">Event</th>
+                <th className="px-3 py-2 font-medium">Agreed</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.contacts.slice(0, 200).map((c) => (
+                <tr key={`${c.email}-${c.eventTitle}`} className="border-t border-border">
+                  <td className="px-3 py-2 text-card-foreground">{c.name}</td>
+                  <td className="px-3 py-2 text-card-foreground">{c.email}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{c.eventTitle}</td>
+                  <td className="px-3 py-2 text-muted-foreground">
+                    {c.consentedAt ? new Date(c.consentedAt).toLocaleDateString() : ""}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className="mt-3 text-xs text-muted-foreground">
+        If someone withdraws, they drop off this list. Remove them from your own systems too.
+      </p>
+    </Card>
+  );
+}
+
+export function IntegrationsTab() {
+  const status = useCrmStatus();
+  const connect = useConnectHighLevel();
+  const disconnect = useDisconnectCrm();
+  const [locationId, setLocationId] = useState("");
+  const [token, setToken] = useState("");
+
+  if (status.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  const data = status.data;
+  const conn = data?.connection ?? null;
+
+  const save = () => {
+    connect.mutate(
+      { locationId, token },
+      {
+        onSuccess: () => {
+          setToken("");
+          toast.success("HighLevel connected");
+        },
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Could not connect"),
+      },
+    );
+  };
+
+  return (
+    <div className="space-y-8">
+      <ConsentedContactsCard />
+      <Card
+        title="HighLevel (your CRM)"
+        subtitle="Add the people who say you may contact them straight into your own HighLevel account."
+      >
+        {!data?.available ? (
+          <p className="text-sm text-muted-foreground">
+            Connecting your CRM is included with the Organiser and Teams monthly plans. Upgrade in
+            Plan &amp; billing to use it.
+          </p>
+        ) : (
+          <div className="space-y-5">
+            <p className="text-sm text-muted-foreground">
+              Participants see a tick box asking whether you may contact them. Only people who tick
+              it are added to your HighLevel account, tagged <code>klokk</code> and{" "}
+              <code>mktg-consent=yes</code>. You are responsible for how you then contact them,
+              including a working unsubscribe.
+            </p>
+            {conn && (
+              <div className="rounded-xl border border-border bg-background p-4 text-sm">
+                <p className="font-medium text-card-foreground">
+                  {conn.status === "active" ? "Connected" : "Connected, but the last send failed"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">Location ID: {conn.locationId}</p>
+                {conn.lastError && (
+                  <p className="mt-2 text-xs text-destructive">{conn.lastError}</p>
+                )}
+                {conn.lastSuccessAt && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Last contact added: {new Date(conn.lastSuccessAt).toLocaleString()}
+                  </p>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() =>
+                    disconnect.mutate(undefined, {
+                      onSuccess: () => toast.success("Disconnected"),
+                      onError: () => toast.error("Could not disconnect"),
+                    })
+                  }
+                >
+                  <Trash2 className="size-4" />
+                  Disconnect
+                </Button>
+              </div>
+            )}
+            <div className="space-y-3">
+              <p className="text-xs font-semibold text-card-foreground">
+                {conn ? "Replace the connection" : "Connect HighLevel"}
+              </p>
+              <Input
+                value={locationId}
+                onChange={(e) => setLocationId(e.target.value)}
+                placeholder="Location ID (Settings → Business Profile)"
+                className="bg-card text-card-foreground"
+              />
+              <Input
+                type="password"
+                autoComplete="off"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder="Private Integration token"
+                className="bg-card text-card-foreground"
+              />
+              <p className="text-xs text-muted-foreground">
+                Create the token in HighLevel under Settings → Private Integrations. Give it the
+                contacts write scope only. We store it encrypted and never show it again.
+              </p>
+              <Button
+                type="button"
+                onClick={save}
+                disabled={connect.isPending || !locationId.trim() || !token.trim()}
+              >
+                {connect.isPending ? "Checking…" : "Save and test"}
+              </Button>
+            </div>
+            {data.recent.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-card-foreground">Recent deliveries</p>
+                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                  {data.recent.map((r) => (
+                    <li key={r.at}>
+                      {new Date(r.at).toLocaleString()}:{" "}
+                      {r.status === "ok" ? "added" : `failed${r.error ? ` (${r.error})` : ""}`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+export function MarketingConsentCard({ account }: { account: KlokkAccount }) {
+  const update = useUpdateMarketingConsent();
+  const [on, setOn] = useState(account.marketingConsent);
+  useEffect(() => setOn(account.marketingConsent), [account.marketingConsent]);
+  const change = (next: boolean) => {
+    setOn(next);
+    update.mutate(
+      { consent: next },
+      {
+        onSuccess: () => toast.success(next ? "You will hear from Klokk" : "You have opted out"),
+        onError: () => {
+          setOn(!next);
+          toast.error("Could not save");
+        },
+      },
+    );
+  };
+  return (
+    <Card
+      title="Messages from Klokk"
+      subtitle="News, tips and offers about Klokk. You always get emails about your events and account."
+    >
+      <label className="flex cursor-pointer items-start gap-3 text-sm text-muted-foreground">
+        <Checkbox
+          checked={on}
+          onCheckedChange={(v) => change(v === true)}
+          disabled={update.isPending}
+          className="mt-0.5"
+        />
+        <span>Klokk (Pegasus Apps) may contact me about Klokk. I can change this at any time.</span>
+      </label>
+    </Card>
   );
 }

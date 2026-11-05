@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowRight, MailCheck } from "lucide-react";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { KlokkFullLogo } from "@/components/klokk/logo";
 import { PasswordStrength } from "@/components/klokk/password-strength";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,8 @@ const schema = z
     lastName: z.string().min(1, "Required"),
     email: z.string().email("Enter a valid email"),
     password: z.string().min(8, "At least 8 characters"),
+    // Optional and unticked by default.
+    marketingConsent: z.boolean(),
   })
   .refine((d) => d.email && d.password, { path: ["email"], message: "" });
 
@@ -53,14 +56,24 @@ function SignUp() {
   const {
     register,
     handleSubmit,
+    control,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { marketingConsent: false },
+  });
   const passwordValue = watch("password");
 
   const onSubmit = async (values: FormValues) => {
+    const consentAt = values.marketingConsent ? new Date().toISOString() : null;
     const options: { data: object } = {
-      data: { first_name: values.firstName, last_name: values.lastName },
+      data: {
+        first_name: values.firstName,
+        last_name: values.lastName,
+        marketing_consent: values.marketingConsent,
+        marketing_consent_at: consentAt,
+      },
     };
 
     let signUpResult;
@@ -88,21 +101,25 @@ function SignUp() {
     // Create the profile row (best-effort, RLS allows self-insert).
     if (data?.user) {
       try {
+        // Generated database types lag behind the migration until the project regenerates them.
         await supabase.from("profiles").upsert({
           id: data.user.id,
           email: values.email,
           first_name: values.firstName,
           last_name: values.lastName,
-        });
+          marketing_consent: values.marketingConsent,
+          marketing_consent_at: consentAt,
+          marketing_consent_version: "2026-11-05",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
       } catch {
         /* best-effort */
       }
     }
 
-    // Fire the CRM form-tracking event so a contact is created in the
-    // sub-account, tagged with the account level. Fire-and-forget — never
-    // blocks the UX.
+    // Add the organiser to Klokk's CRM only if they ticked the box. Fire-and-forget.
     try {
+      if (!values.marketingConsent) throw new Error("no consent");
       const trackingPayload = buildTrackingPayload(
         "klokk-signup",
         "Klokk Sign-up",
@@ -120,6 +137,8 @@ function SignUp() {
       postTrackingEvent(trackingPayload, {
         customFields: {
           HW6sdINihzHa9KowrSTE: { value: "free", label: "Account Level" },
+          mktg_consent: { value: "yes", label: "Marketing consent" },
+          type: { value: "organiser", label: "Type" },
         },
       });
     } catch {
@@ -221,6 +240,23 @@ function SignUp() {
               />
               <PasswordStrength value={passwordValue ?? ""} />
             </Field>
+            <Controller
+              control={control}
+              name="marketingConsent"
+              render={({ field }) => (
+                <label className="flex cursor-pointer items-start gap-3 text-xs text-muted-foreground">
+                  <Checkbox
+                    checked={field.value === true}
+                    onCheckedChange={(v) => field.onChange(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    Klokk (Pegasus Apps) may contact me about Klokk, including news, tips and
+                    offers. Optional. I can unsubscribe at any time.
+                  </span>
+                </label>
+              )}
+            />
             <p className="text-xs text-muted-foreground">
               The free plan includes 3 events. Free-plan events and their responses are deleted
               automatically 90 days after they are created.

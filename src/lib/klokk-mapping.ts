@@ -136,5 +136,6 @@ export function mapProfile(row: any, usage: any[]): KlokkAccount {
     smsUsageLog: (usage ?? []).map(mapSmsUsage),
     notificationPrefs: row.notification_prefs ?? DEFAULT_NOTIFICATION_PREFS,
     embedSettings: row.embed_settings ?? DEFAULT_EMBED_SETTINGS,
+    marketingConsent: row.marketing_consent === true,
   };
 }
