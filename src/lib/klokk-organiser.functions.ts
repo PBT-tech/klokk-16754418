@@ -460,6 +460,32 @@ export const updateMyEvent = createServerFn({ method: "POST" })
   });
 
 /**
+ * Each edit can email every participant, so cap how often one event (and one organiser) can
+ * be edited. If the limiter itself is unavailable the edit is allowed rather than blocked.
+ */
+async function limitEdits(userId: string, eventId: string): Promise<void> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    for (const [key, max] of [
+      [`edit:event:${eventId}`, 20],
+      [`edit:user:${userId}`, 60],
+    ] as const) {
+      const { data, error } = await supabaseAdmin.rpc("check_rate_limit", {
+        p_key: key,
+        p_max: max,
+        p_window_seconds: 3600,
+      });
+      if (!error && data === false) {
+        throw new Error("You have edited this a lot in the last hour. Please wait a while.");
+      }
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("You have edited")) throw e;
+    console.error("[klokk] edit limiter unavailable:", e);
+  }
+}
+
+/**
  * Organiser edits an event's details and the time slots people can pick from.
  * Text can be changed while the event is open. Slots can be added or removed until the
  * event is confirmed, cancelled or closed; removing a slot also removes it from the
@@ -496,6 +522,7 @@ export const editMyEvent = createServerFn({ method: "POST" })
     if (evErr) throw evErr;
     if (!ev) throw new Error("Event not found");
     const before: KlokkEvent = mapEvent(ev);
+    await limitEdits(userId, ev.id);
 
     const changingSlots = data.addSlots.length > 0 || data.removeSlotIds.length > 0;
     if (changingSlots && ["confirmed", "cancelled", "closed"].includes(ev.status)) {
@@ -538,18 +565,22 @@ export const editMyEvent = createServerFn({ method: "POST" })
       // with the organiser's own session, so this uses the server-only key (ownership
       // was verified above).
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: answers } = await supabaseAdmin
+      const { data: answers, error: answersErr } = await supabaseAdmin
         .from("participant_responses")
         .select("id, slot_ids")
         .eq("event_id", ev.id)
         .overlaps("slot_ids", toRemove);
+      if (answersErr) throw answersErr;
       for (const r of answers ?? []) {
-        await supabaseAdmin
+        const { error: updErr } = await supabaseAdmin
           .from("participant_responses")
           .update({
             slot_ids: ((r.slot_ids ?? []) as string[]).filter((x) => !toRemove.includes(x)),
           })
-          .eq("id", r.id);
+          .eq("id", r.id)
+          .eq("event_id", ev.id);
+        // Failing loudly lets the organiser save again; the clean-up is repeatable.
+        if (updErr) throw updErr;
       }
     }
 

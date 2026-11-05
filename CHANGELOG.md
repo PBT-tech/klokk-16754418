@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+- Editing an event now stops with an error if clearing removed times from participants' answers fails, instead of silently leaving them behind.
+- Editing an event is limited to 20 edits per event and 60 per organiser per hour, because each edit can email every participant.
 
 - Two organisers offering the same date and time no longer collide: time slot ids are now unique across all events.
 
