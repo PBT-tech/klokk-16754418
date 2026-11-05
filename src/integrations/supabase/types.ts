@@ -76,6 +76,78 @@ export type Database = {
           },
         ]
       }
+      crm_connections: {
+        Row: {
+          created_at: string
+          external_account_id: string
+          id: string
+          last_error: string | null
+          last_success_at: string | null
+          provider: string
+          status: string
+          token_ciphertext: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          external_account_id: string
+          id?: string
+          last_error?: string | null
+          last_success_at?: string | null
+          provider: string
+          status?: string
+          token_ciphertext: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          external_account_id?: string
+          id?: string
+          last_error?: string | null
+          last_success_at?: string | null
+          provider?: string
+          status?: string
+          token_ciphertext?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      crm_sync_log: {
+        Row: {
+          created_at: string
+          error: string | null
+          event_id: string | null
+          id: string
+          provider: string
+          response_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event_id?: string | null
+          id?: string
+          provider: string
+          response_id?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event_id?: string | null
+          id?: string
+          provider?: string
+          response_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       embed_events: {
         Row: {
           created_at: string
@@ -337,39 +409,51 @@ export type Database = {
       participant_responses: {
         Row: {
           avatar_url: string | null
+          consent_recorded_at: string | null
+          consent_version: string | null
           edit_token_hash: string | null
           email: string
           event_id: string
           first_name: string
           id: string
+          klokk_marketing_consent: boolean
           last_name: string
           notes: string | null
+          organiser_marketing_consent: boolean
           phone: string | null
           slot_ids: string[] | null
           submitted_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          consent_recorded_at?: string | null
+          consent_version?: string | null
           edit_token_hash?: string | null
           email: string
           event_id: string
           first_name: string
           id?: string
+          klokk_marketing_consent?: boolean
           last_name: string
           notes?: string | null
+          organiser_marketing_consent?: boolean
           phone?: string | null
           slot_ids?: string[] | null
           submitted_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          consent_recorded_at?: string | null
+          consent_version?: string | null
           edit_token_hash?: string | null
           email?: string
           event_id?: string
           first_name?: string
           id?: string
+          klokk_marketing_consent?: boolean
           last_name?: string
           notes?: string | null
+          organiser_marketing_consent?: boolean
           phone?: string | null
           slot_ids?: string[] | null
           submitted_at?: string | null
@@ -398,6 +482,9 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          marketing_consent: boolean
+          marketing_consent_at: string | null
+          marketing_consent_version: string | null
           notification_prefs: Json | null
           plan: string | null
           plan_renews_at: string | null
@@ -418,6 +505,9 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          marketing_consent?: boolean
+          marketing_consent_at?: string | null
+          marketing_consent_version?: string | null
           notification_prefs?: Json | null
           plan?: string | null
           plan_renews_at?: string | null
@@ -438,6 +528,9 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          marketing_consent?: boolean
+          marketing_consent_at?: string | null
+          marketing_consent_version?: string | null
           notification_prefs?: Json | null
           plan?: string | null
           plan_renews_at?: string | null
