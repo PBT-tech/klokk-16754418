@@ -13,6 +13,8 @@ import {
   listConsentedContacts,
   connectHighLevel,
   disconnectCrm,
+  setDefaultCrm,
+  setEventContactSettings,
   getMyProfile,
   updateMyProfile,
   getMyEvents,
@@ -32,6 +34,13 @@ import {
   sendReminderFn,
   sendInvitationsFn,
 } from "./klokk-organiser.functions";
+import {
+  getSystemRole,
+  listSystemUsers,
+  setUserPlan,
+  deleteSystemUser,
+  listSystemAudit,
+} from "./klokk-owner.functions";
 import { getEditToken } from "./klokk-edit-token";
 import { claimOrder, getMyBilling } from "./klokk-billing.functions";
 import { getPublicEvent, lookupMyResponse, submitResponse } from "./klokk-public.functions";
@@ -341,7 +350,8 @@ export function useConnectHighLevel() {
   const qc = useQueryClient();
   const fn = useServerFn(connectHighLevel);
   return useMutation({
-    mutationFn: (input: { locationId: string; token: string }) => fn({ data: input }),
+    mutationFn: (input: { label?: string; locationId: string; token: string }) =>
+      fn({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["klokk-crm"] }),
   });
 }
@@ -350,8 +360,80 @@ export function useDisconnectCrm() {
   const qc = useQueryClient();
   const fn = useServerFn(disconnectCrm);
   return useMutation({
-    mutationFn: async () => (fn as () => Promise<unknown>)(),
+    mutationFn: (id: string) => fn({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["klokk-crm"] });
+      qc.invalidateQueries({ queryKey: ["klokk-events"] });
+    },
+  });
+}
+
+export function useSetDefaultCrm() {
+  const qc = useQueryClient();
+  const fn = useServerFn(setDefaultCrm);
+  return useMutation({
+    mutationFn: (id: string) => fn({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["klokk-crm"] }),
+  });
+}
+
+export function useSetEventContactSettings() {
+  const qc = useQueryClient();
+  const fn = useServerFn(setEventContactSettings);
+  return useMutation({
+    mutationFn: (input: {
+      eventId: string;
+      connectionId: string | null;
+      hostName: string | null;
+    }) => fn({ data: input }),
+    onSuccess: () => qc.invalidateQueries(),
+  });
+}
+
+// ---------- system owner console ----------
+
+export function useSystemRole(enabled = true) {
+  const fn = useServerFn(getSystemRole);
+  return useQuery({
+    queryKey: ["klokk-system-role"],
+    queryFn: () => fn(),
+    staleTime: 60_000,
+    enabled,
+  });
+}
+
+export function useSystemUsers(enabled: boolean) {
+  const fn = useServerFn(listSystemUsers);
+  return useQuery({ queryKey: ["klokk-system-users"], queryFn: () => fn(), enabled });
+}
+
+export function useSystemAudit(enabled: boolean) {
+  const fn = useServerFn(listSystemAudit);
+  return useQuery({ queryKey: ["klokk-system-audit"], queryFn: () => fn(), enabled });
+}
+
+export function useSetUserPlan() {
+  const qc = useQueryClient();
+  const fn = useServerFn(setUserPlan);
+  return useMutation({
+    mutationFn: (input: { userId: string; plan: "free" | "casual" | "organiser" | "teams" }) =>
+      fn({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["klokk-system-users"] });
+      qc.invalidateQueries({ queryKey: ["klokk-system-audit"] });
+    },
+  });
+}
+
+export function useDeleteSystemUser() {
+  const qc = useQueryClient();
+  const fn = useServerFn(deleteSystemUser);
+  return useMutation({
+    mutationFn: (userId: string) => fn({ data: { userId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["klokk-system-users"] });
+      qc.invalidateQueries({ queryKey: ["klokk-system-audit"] });
+    },
   });
 }
 

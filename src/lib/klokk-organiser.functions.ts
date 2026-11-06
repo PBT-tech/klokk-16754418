@@ -1082,12 +1082,13 @@ export const getCrmStatus = createServerFn({ method: "GET" })
       .maybeSingle();
     const { planHasCrm } = await import("./klokk-crm.server");
     const db = await crmAdmin();
-    const { data: conn } = await db
+    const { data: conns } = await db
       .from("crm_connections")
-      .select("provider, external_account_id, status, last_error, last_success_at")
+      .select(
+        "id, label, provider, external_account_id, status, last_error, last_success_at, is_default",
+      )
       .eq("user_id", userId)
-      .eq("provider", "highlevel")
-      .maybeSingle();
+      .order("created_at", { ascending: true });
     const { data: log } = await db
       .from("crm_sync_log")
       .select("status, error, created_at")
@@ -1096,15 +1097,16 @@ export const getCrmStatus = createServerFn({ method: "GET" })
       .limit(5);
     return {
       available: planHasCrm(p?.plan),
-      connection: conn
-        ? {
-            provider: conn.provider as string,
-            locationId: conn.external_account_id as string,
-            status: conn.status as "active" | "error",
-            lastError: (conn.last_error as string | null) ?? null,
-            lastSuccessAt: (conn.last_success_at as string | null) ?? null,
-          }
-        : null,
+      connections: ((conns ?? []) as any[]).map((c) => ({
+        id: c.id as string,
+        label: ((c.label as string | null) || "HighLevel") as string,
+        provider: c.provider as string,
+        locationId: c.external_account_id as string,
+        status: c.status as "active" | "error",
+        lastError: (c.last_error as string | null) ?? null,
+        lastSuccessAt: (c.last_success_at as string | null) ?? null,
+        isDefault: c.is_default === true,
+      })),
       recent: ((log ?? []) as any[]).map((l) => ({
         status: l.status as "ok" | "failed",
         error: (l.error as string | null) ?? null,
@@ -1117,6 +1119,7 @@ export const connectHighLevel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(
     z.object({
+      label: z.string().trim().max(60).optional(),
       locationId: z
         .string()
         .trim()
@@ -1130,17 +1133,25 @@ export const connectHighLevel = createServerFn({ method: "POST" })
     const { verifyHighLevel, encryptSecret } = await import("./klokk-crm.server");
     await verifyHighLevel(data.locationId, data.token);
     const db = await crmAdmin();
+    const { data: existing } = await db
+      .from("crm_connections")
+      .select("id, is_default")
+      .eq("user_id", userId);
+    const rows = (existing ?? []) as any[];
     const { error } = await db.from("crm_connections").upsert(
       {
         user_id: userId,
         provider: "highlevel",
         external_account_id: data.locationId,
+        label: data.label || null,
         token_ciphertext: await encryptSecret(data.token),
         status: "active",
         last_error: null,
+        // The first connection a user saves becomes their default.
+        is_default: rows.length === 0 ? true : undefined,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "user_id,provider" },
+      { onConflict: "user_id,provider,external_account_id" },
     );
     if (error) throw error;
     return { ok: true };
@@ -1148,13 +1159,85 @@ export const connectHighLevel = createServerFn({ method: "POST" })
 
 export const disconnectCrm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data, context }) => {
     const db = await crmAdmin();
-    const { error } = await db
+    const { data: gone } = await db
       .from("crm_connections")
       .delete()
+      .eq("id", data.id)
       .eq("user_id", context.userId)
-      .eq("provider", "highlevel");
+      .select("is_default")
+      .maybeSingle();
+    // If the default was removed, promote the oldest remaining connection.
+    if (gone?.is_default) {
+      const { data: next } = await db
+        .from("crm_connections")
+        .select("id")
+        .eq("user_id", context.userId)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (next) await db.from("crm_connections").update({ is_default: true }).eq("id", next.id);
+    }
+    return { ok: true };
+  });
+
+export const setDefaultCrm = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data, context }) => {
+    const db = await crmAdmin();
+    const { data: mine } = await db
+      .from("crm_connections")
+      .select("id")
+      .eq("id", data.id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (!mine) throw new Error("Connection not found");
+    await db.from("crm_connections").update({ is_default: false }).eq("user_id", context.userId);
+    const { error } = await db
+      .from("crm_connections")
+      .update({ is_default: true })
+      .eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+/** Per event: which saved CRM receives ticked participants, and an optional host name. */
+export const setEventContactSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    z.object({
+      eventId: z.string(),
+      connectionId: z.string().uuid().nullable(),
+      hostName: z.string().trim().max(80).nullable(),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await requireCrmPlan(supabase, userId);
+    const db = await crmAdmin();
+    const { data: ev } = await db
+      .from("events")
+      .select("id")
+      .eq("id", data.eventId)
+      .eq("owner_id", userId)
+      .maybeSingle();
+    if (!ev) throw new Error("Event not found");
+    if (data.connectionId) {
+      const { data: conn } = await db
+        .from("crm_connections")
+        .select("id")
+        .eq("id", data.connectionId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!conn) throw new Error("Connection not found");
+    }
+    const { error } = await db
+      .from("events")
+      .update({ crm_connection_id: data.connectionId, host_name: data.hostName || null })
+      .eq("id", data.eventId);
     if (error) throw error;
     return { ok: true };
   });

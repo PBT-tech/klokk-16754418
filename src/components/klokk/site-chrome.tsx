@@ -1,10 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Calendar, LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { Calendar, Crown, LayoutDashboard, LogOut, Settings } from "lucide-react";
 
 import { KlokkLogo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
-import { useSession, useAuthActions } from "@/lib/klokk-hooks";
+import { useSession, useAuthActions, useSystemRole } from "@/lib/klokk-hooks";
 import { toast } from "sonner";
 
 export function SiteHeader() {
@@ -12,6 +12,7 @@ export function SiteHeader() {
   const { signOut } = useAuthActions();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAuthed = !!session;
+  const owner = useSystemRole(isAuthed);
   if (pathname.startsWith("/embed/")) return null;
 
   const handleSignOut = () => {
@@ -33,6 +34,12 @@ export function SiteHeader() {
                 <LayoutDashboard className="size-4" />
                 <span className="hidden sm:inline">Dashboard</span>
               </NavLink>
+              {owner.data?.role === "owner" && (
+                <NavLink to="/owner" active={pathname.startsWith("/owner")}>
+                  <Crown className="size-4" />
+                  <span className="hidden sm:inline">Owner</span>
+                </NavLink>
+              )}
               <NavLink to="/settings" active={pathname.startsWith("/settings")}>
                 <Settings className="size-4" />
                 <span className="hidden sm:inline">Settings</span>

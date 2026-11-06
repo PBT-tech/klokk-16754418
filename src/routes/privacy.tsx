@@ -21,7 +21,7 @@ function Page() {
       </Link>
       <h1 className="mt-6 font-display text-3xl font-semibold text-foreground">Privacy Policy</h1>
       <p className="mt-2 text-xs text-muted-foreground">
-        Draft for legal review · Last updated 5 November 2026
+        Draft for legal review · Last updated 6 November 2026
       </p>
       <div className="mt-8 space-y-4 text-sm leading-relaxed text-muted-foreground">
         <p>
@@ -53,7 +53,10 @@ function Page() {
         <p>
           When you respond to an event you can tick up to two optional boxes. Neither is ticked for
           you, and leaving them unticked does not affect your response or the emails about the
-          meeting. Only people who tick a box are added to the matching customer system.
+          meeting. We keep every organiser's and participant's name and email in our own customer
+          system so we can run the service and answer your questions, but we only send marketing to
+          people who ticked the Klokk box. For the organiser box, only people who tick it are added
+          to the organiser's customer system.
         </p>
         <ul className="list-disc space-y-1 pl-5">
           <li>
@@ -62,9 +65,11 @@ function Page() {
           </li>
           <li>
             <span className="font-medium text-foreground">The organiser may contact me.</span> Where
-            the organiser is on a paid monthly plan and has connected their own customer system,
-            your name, email and, if you gave it, mobile number are added to it. The organiser may
-            then contact you about other events, marketing, newsletters and similar.
+            the organiser is on a paid monthly plan and has connected their own customer system (the
+            organiser may name a host, such as a partner they run the event with, and send your
+            details to that host's customer system), your name, email and, if you gave it, mobile
+            number are added to it. The organiser may then contact you about other events,
+            marketing, newsletters and similar.
           </li>
         </ul>
         <p>

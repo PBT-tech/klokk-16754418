@@ -49,11 +49,14 @@ function Page() {
         <p>
           When a participant responds to an event they may tick optional boxes that allow Klokk, and
           the organiser, to contact them about other events, marketing, newsletters and similar.
-          Only participants who tick a box may be added to the related customer system. Organisers
-          on a paid monthly plan can connect their own HighLevel account so consenting participants
-          are added to it. By connecting, the organiser agrees to use those details lawfully, to
-          honour unsubscribe and withdrawal requests, and to comply with the Spam Act 2001 and any
-          other privacy and marketing law that applies to them.
+          Only participants who tick a box may be marketed to, or added to an organiser's customer
+          system. Organisers on a paid monthly plan can connect one or more of their own HighLevel
+          accounts, and choose one for each event, so consenting participants are added to it. An
+          organiser running an event with or for others may name them as host and connect that
+          host's account, and must have that host's permission to do so. By connecting, the
+          organiser agrees to use those details lawfully, to honour unsubscribe and withdrawal
+          requests, and to comply with the Spam Act 2001 and any other privacy and marketing law
+          that applies to them.
         </p>
         <h2 className="pt-2 font-display text-lg font-semibold text-foreground">Ownership</h2>
         <p>

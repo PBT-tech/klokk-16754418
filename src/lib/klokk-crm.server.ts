@@ -146,6 +146,36 @@ async function setHighLevelConsent(
 }
 
 /**
+ * Which saved CRM receives this event's ticked participants:
+ * the event's own choice, otherwise the owner's default. Null means nothing is sent.
+ */
+async function resolveConnection(db: any, ownerId: string, eventId: string): Promise<any | null> {
+  const cols = "id, provider, external_account_id, token_ciphertext";
+  const { data: ev } = await db
+    .from("events")
+    .select("crm_connection_id")
+    .eq("id", eventId)
+    .maybeSingle();
+  if (ev?.crm_connection_id) {
+    const { data: chosen } = await db
+      .from("crm_connections")
+      .select(cols)
+      .eq("id", ev.crm_connection_id)
+      .eq("user_id", ownerId)
+      .maybeSingle();
+    if (chosen) return chosen;
+  }
+  const { data: def } = await db
+    .from("crm_connections")
+    .select(cols)
+    .eq("user_id", ownerId)
+    .eq("provider", "highlevel")
+    .eq("is_default", true)
+    .maybeSingle();
+  return def ?? null;
+}
+
+/**
  * Push a participant's consent choice to the organiser's connected CRM. Best effort: never throws.
  * The outcome is written to crm_sync_log so the organiser can see failures in Settings.
  */
@@ -160,12 +190,7 @@ export async function pushParticipantToCrm(opts: {
   if (!planHasCrm(opts.ownerPlan)) return;
   const db = await admin();
   try {
-    const { data: conn } = await db
-      .from("crm_connections")
-      .select("id, provider, external_account_id, token_ciphertext")
-      .eq("user_id", opts.ownerId)
-      .eq("provider", "highlevel")
-      .maybeSingle();
+    const conn = await resolveConnection(db, opts.ownerId, opts.eventId);
     if (!conn) return;
     try {
       const token = await decryptSecret(conn.token_ciphertext);
@@ -179,6 +204,7 @@ export async function pushParticipantToCrm(opts: {
         provider: "highlevel",
         response_id: opts.responseId,
         event_id: opts.eventId,
+        connection_id: conn.id,
         status: "ok",
       });
     } catch (e) {
@@ -192,6 +218,7 @@ export async function pushParticipantToCrm(opts: {
         provider: "highlevel",
         response_id: opts.responseId,
         event_id: opts.eventId,
+        connection_id: conn.id,
         status: "failed",
         error: message,
       });
