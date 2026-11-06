@@ -13,7 +13,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { KlokkFullLogo } from "@/components/klokk/logo";
 import { PasswordStrength } from "@/components/klokk/password-strength";
 import { supabase } from "@/integrations/supabase/client";
-import { sendSignupNotification } from "@/lib/klokk-email";
 import { buildTrackingPayload, postTrackingEvent } from "@/lib/klokk-tracking";
 import { useSession } from "@/lib/klokk-hooks";
 import { ResendVerificationButton } from "@/components/klokk/verify-email-notice";
@@ -117,9 +116,10 @@ function SignUp() {
       }
     }
 
-    // Add the organiser to Klokk's CRM only if they ticked the box. Fire-and-forget.
+    // Create/update the organiser's CRM contact on every signup. Marketing consent is a custom
+    // field that reflects the actual tick-box choice (yes/no) — it does not gate the submission,
+    // and there is no second form. Fire-and-forget.
     try {
-      if (!values.marketingConsent) throw new Error("no consent");
       const trackingPayload = buildTrackingPayload(
         "klokk-signup",
         "Klokk Sign-up",
@@ -137,19 +137,12 @@ function SignUp() {
       postTrackingEvent(trackingPayload, {
         customFields: {
           HW6sdINihzHa9KowrSTE: { value: "free", label: "Account Level" },
-          mktg_consent: { value: "yes", label: "Marketing consent" },
+          mktg_consent: {
+            value: values.marketingConsent ? "yes" : "no",
+            label: "Marketing consent",
+          },
           type: { value: "organiser", label: "Type" },
         },
-      });
-    } catch {
-      /* best-effort */
-    }
-
-    // Notify the sub-account owner that a new organiser signed up.
-    try {
-      sendSignupNotification({
-        newOrganiserEmail: values.email,
-        newOrganiserName: `${values.firstName} ${values.lastName}`,
       });
     } catch {
       /* best-effort */
