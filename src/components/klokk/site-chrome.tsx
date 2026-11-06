@@ -106,12 +106,12 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex flex-col gap-1">
           <KlokkLogo />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Find a time that works for everyone — fast.
           </p>
         </div>
         <div className="flex flex-col gap-1 sm:items-end">
-          <nav className="flex gap-4 text-xs text-muted-foreground" aria-label="Legal">
+          <nav className="flex gap-4 text-sm text-muted-foreground" aria-label="Legal">
             <Link
               to="/privacy"
               className="underline-offset-4 hover:text-foreground hover:underline"
@@ -122,7 +122,7 @@ export function SiteFooter() {
               Terms of Use
             </Link>
           </nav>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} Pegasus Apps · Klokk · Premium meeting co-ordinator
           </p>
         </div>

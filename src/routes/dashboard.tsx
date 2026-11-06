@@ -241,7 +241,7 @@ function EventCard({
         </dl>
 
         {nearDeletion && (
-          <p className="mt-3 flex items-center gap-1.5 text-xs text-destructive">
+          <p className="mt-3 flex items-center gap-1.5 text-sm text-destructive">
             <CalendarX className="size-3.5" />
             Scheduled for deletion in {Math.max(0, daysLeft ?? 0)} day{daysLeft === 1 ? "" : "s"}
           </p>
@@ -249,7 +249,7 @@ function EventCard({
       </Link>
 
       <div className="mt-4 flex items-center justify-between gap-2 border-t border-border/70 pt-3">
-        <span className="text-xs text-muted-foreground">
+        <span className="text-sm text-muted-foreground">
           Created {formatDateShort(event.createdAt)}
         </span>
         <div className="flex gap-2">

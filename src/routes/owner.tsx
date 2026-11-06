@@ -58,7 +58,12 @@ function OwnerPage() {
       <div className="mx-auto max-w-md px-4 py-20 text-center">
         <h1 className="font-display text-2xl font-semibold text-foreground">Not available</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          This area is for the owner of the Klokk system.
+          This area is for the owner of the Klokk system. You are signed in as{" "}
+          <span className="font-medium text-foreground">{session.user.email}</span>.
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          If this account should be the owner, add that email to the setting called
+          SYSTEM_OWNER_EMAILS in AI Studio, publish, then sign in again.
         </p>
         <Link
           to="/dashboard"
@@ -122,7 +127,7 @@ function OwnerPage() {
       ) : (
         <div className="mt-4 overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-border text-xs text-muted-foreground">
+            <thead className="border-b border-border text-sm text-muted-foreground">
               <tr>
                 <th className="px-3 py-2">User</th>
                 <th className="px-3 py-2">Plan</th>
@@ -138,7 +143,7 @@ function OwnerPage() {
                 <tr key={u.id} className="border-b border-border/60 last:border-0">
                   <td className="px-3 py-2">
                     <p className="font-medium text-card-foreground">{u.name || "—"}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       {u.email}
                       {u.systemRole ? ` · ${u.systemRole}` : ""}
                     </p>
@@ -159,7 +164,7 @@ function OwnerPage() {
                           },
                         );
                       }}
-                      className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                      className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground"
                       aria-label={`Plan for ${u.email}`}
                     >
                       {PLANS.map((p) => (
@@ -170,7 +175,7 @@ function OwnerPage() {
                     </select>
                   </td>
                   <td className="px-3 py-2">{u.eventsTotal}</td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground">
+                  <td className="px-3 py-2 text-sm text-muted-foreground">
                     {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
                   </td>
                   <td className="px-3 py-2">{u.marketingConsent ? "Yes" : "No"}</td>
@@ -213,7 +218,7 @@ function OwnerPage() {
       )}
 
       <h2 className="mt-10 font-display text-lg font-semibold text-foreground">Audit log</h2>
-      <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+      <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
         {(audit.data ?? []).map((a) => (
           <li key={a.id}>
             {new Date(a.at).toLocaleString()}: {a.action.replace(/_/g, " ")}
@@ -229,7 +234,7 @@ function OwnerPage() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-xl border border-border bg-card p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm text-muted-foreground">{label}</p>
       <p className="font-display text-2xl font-semibold text-card-foreground">{value}</p>
     </div>
   );

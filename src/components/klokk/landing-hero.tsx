@@ -9,11 +9,11 @@ function HeroPreview() {
           <span className="size-2.5 rounded-full bg-destructive/60" />
           <span className="size-2.5 rounded-full bg-accent/70" />
           <span className="size-2.5 rounded-full bg-primary/50" />
-          <span className="ml-2 text-xs text-muted-foreground">klokk.com/event/strategy-sync</span>
+          <span className="ml-2 text-sm text-muted-foreground">klokk.com/event/strategy-sync</span>
         </div>
         <div className="grid gap-6 p-6 sm:grid-cols-5 sm:p-8">
           <div className="sm:col-span-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-accent">
+            <p className="text-sm font-medium uppercase tracking-wide text-accent">
               Q3 Strategy Sync
             </p>
             <h3 className="mt-2 font-display text-xl font-semibold text-foreground">
@@ -26,7 +26,7 @@ function HeroPreview() {
               {["Mara", "Theo", "Priya", "Lars"].map((n) => (
                 <span
                   key={n}
-                  className="rounded-full px-2.5 py-1 text-xs text-color-foreground bg-destructive text-muted"
+                  className="rounded-full px-2.5 py-1 text-sm text-color-foreground bg-destructive text-muted"
                 >
                   {n}
                 </span>

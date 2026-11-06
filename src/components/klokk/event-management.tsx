@@ -225,7 +225,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
             }}
           >
             <Code2 className="size-4" />
-            Embed code
+            Put on my website
           </Button>
           <Link to="/events/new" search={{ from: event.id }}>
             <Button variant="outline" size="sm">
@@ -242,12 +242,12 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Stat
-          label="Responses"
+          label="Replies"
           value={`${responded}${target ? `/${target}` : ""}`}
           icon={<Users className="size-4" />}
         />
         <Stat
-          label="Deadline"
+          label="Replies close"
           value={status === "expired" ? "Expired" : relativeDeadline(event.deadline)}
           icon={<Clock className="size-4" />}
         />
@@ -293,8 +293,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
           ) : (
             <>
               <p className="mb-4 text-sm text-muted-foreground">
-                Tap a slot to select it for confirmation. Shading shows how many participants are
-                available.
+                Tap a time to pick it for the meeting. Darker colour means more people can come.
               </p>
               <AvailabilityHeatMap
                 event={event}
@@ -309,11 +308,11 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
                     onChange={(e) => setUseCustom(e.target.checked)}
                     className="size-4 accent-[var(--color-primary)]"
                   />
-                  Use a different time (not one of the proposed slots)
+                  Use a different time (not one of the times offered)
                 </label>
                 {useCustom && (
                   <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                    <label className="text-xs font-semibold text-card-foreground">
+                    <label className="text-sm font-semibold text-card-foreground">
                       Date
                       <input
                         type="date"
@@ -322,7 +321,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
                         className="mt-1 flex h-9 w-full rounded-md border border-border bg-card px-3 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-semibold text-card-foreground">
+                    <label className="text-sm font-semibold text-card-foreground">
                       Start
                       <input
                         type="time"
@@ -331,7 +330,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
                         className="mt-1 flex h-9 w-full rounded-md border border-border bg-card px-3 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-semibold text-card-foreground">
+                    <label className="text-sm font-semibold text-card-foreground">
                       End
                       <input
                         type="time"
@@ -350,11 +349,11 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
                   className="shadow-premium"
                 >
                   <Check className="size-4" />
-                  Confirm {useCustom ? "custom time" : confirmSlotId ? "selected time" : ""}
+                  Book {useCustom ? "this time" : confirmSlotId ? "the time I picked" : "a time"}
                 </Button>
                 <Button variant="outline" onClick={extend}>
                   <Clock className="size-4" />
-                  Extend deadline
+                  Give 3 more days
                 </Button>
                 {event.participationMode === "named" && (
                   <Button variant="outline" onClick={resend}>
@@ -381,7 +380,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
             <SectionTitle>Share</SectionTitle>
             <div className="rounded-xl border border-border bg-card p-3">
               <div className="flex items-center gap-2">
-                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
                   {link}
                 </span>
                 <Button size="sm" variant="outline" onClick={copyLink}>
@@ -397,19 +396,19 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
                   disabled={sendInvitations.isPending}
                 >
                   <Send className="size-3.5" />
-                  Re-send invitations
+                  Send invitations again
                 </Button>
               )}
             </div>
           </section>
 
           <section id="embed" tabIndex={-1} className="scroll-mt-6 outline-none">
-            <SectionTitle>Embed on a website</SectionTitle>
+            <SectionTitle>Put this on your website</SectionTitle>
             <EmbedPanel event={event} account={account} />
           </section>
 
           <section id="contact" tabIndex={-1} className="scroll-mt-6 outline-none">
-            <SectionTitle>Contact settings</SectionTitle>
+            <SectionTitle>Keeping in touch</SectionTitle>
             <EventContactPanel event={event} account={account} />
           </section>
 
@@ -417,7 +416,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
             <div className="flex flex-wrap gap-2">
               {status !== "confirmed" && (
                 <Button variant="outline" onClick={close}>
-                  Close without confirming
+                  Stop replies without booking
                 </Button>
               )}
               <Button variant="outline" onClick={cancel}>
@@ -426,7 +425,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
               </Button>
               <Button variant="destructive" onClick={remove}>
                 <Trash2 className="size-4" />
-                Delete
+                Delete event
               </Button>
             </div>
           </section>
@@ -482,7 +481,7 @@ function Stat({
         {icon}
       </div>
       <p className="mt-3 font-display text-xl font-bold text-foreground">{value}</p>
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm text-muted-foreground">{label}</p>
     </div>
   );
 }
@@ -517,15 +516,15 @@ function NamedList({
                 <p className="truncate text-sm font-medium text-foreground">
                   {p.firstName} {p.lastName}
                 </p>
-                <p className="truncate text-xs text-muted-foreground">{p.email}</p>
+                <p className="truncate text-sm text-muted-foreground">{p.email}</p>
                 {response && (
                   <>
-                    <p className="mt-1 text-[10px] text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {response.slotIds.length} slot{response.slotIds.length === 1 ? "" : "s"} ·{" "}
                       {formatDate(response.submittedAt)}
                     </p>
                     {response.notes && (
-                      <p className="mt-1 text-xs italic text-accent bg-surface/60 rounded px-2 py-1 border border-border/50">
+                      <p className="mt-1 text-sm italic text-accent bg-surface/60 rounded px-2 py-1 border border-border/50">
                         "{response.notes}"
                       </p>
                     )}
@@ -534,7 +533,7 @@ function NamedList({
               </div>
             </div>
             <span
-              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
                 responded ? "bg-primary/10 text-primary" : "bg-surface-muted text-muted-foreground"
               }`}
             >
@@ -565,22 +564,22 @@ function OpenList({ event }: { event: KlokkEvent }) {
               <p className="truncate text-sm font-medium text-foreground">
                 {r.firstName} {r.lastName}
               </p>
-              <p className="truncate text-xs text-muted-foreground">{r.email}</p>
+              <p className="truncate text-sm text-muted-foreground">{r.email}</p>
               {r.phone && (
-                <p className="truncate text-xs text-muted-foreground">
+                <p className="truncate text-sm text-muted-foreground">
                   <a href={`tel:${r.phone.replace(/[^+\d]/g, "")}`} className="hover:underline">
                     {r.phone}
                   </a>
                 </p>
               )}
               {r.notes && (
-                <p className="mt-1 text-xs italic text-accent bg-surface/60 rounded px-2 py-1 border border-border/50">
+                <p className="mt-1 text-sm italic text-accent bg-surface/60 rounded px-2 py-1 border border-border/50">
                   "{r.notes}"
                 </p>
               )}
             </div>
           </div>
-          <span className="shrink-0 text-xs text-muted-foreground">
+          <span className="shrink-0 text-sm text-muted-foreground">
             {r.slotIds.length} slot{r.slotIds.length === 1 ? "" : "s"}
           </span>
         </li>

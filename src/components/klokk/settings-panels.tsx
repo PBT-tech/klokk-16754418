@@ -253,13 +253,13 @@ export function BillingTab() {
                     {p.name}
                   </h3>
                   {current && (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                       Current plan
                     </span>
                   )}
                 </div>
                 <p className="mt-1 text-sm font-medium text-card-foreground">{p.price}</p>
-                <ul className="mt-3 flex-1 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                <ul className="mt-3 flex-1 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                   {p.points.map((pt) => (
                     <li key={pt}>{pt}</li>
                   ))}
@@ -268,7 +268,7 @@ export function BillingTab() {
                   billing.plan !== "free" && (
                     <a
                       href={cancelMailto(billing.plan)}
-                      className="mt-4 text-center text-xs font-medium text-primary underline-offset-4 hover:underline"
+                      className="mt-4 text-center text-sm font-medium text-primary underline-offset-4 hover:underline"
                     >
                       Request a downgrade / cancellation
                     </a>
@@ -291,7 +291,7 @@ export function BillingTab() {
             );
           })}
         </div>
-        <p className="mt-4 text-xs text-muted-foreground">
+        <p className="mt-4 text-sm text-muted-foreground">
           Checkout opens with all current prices. To switch between Organiser and Teams, or to
           cancel, email us and we'll update your subscription (you keep access until the end of the
           period you've paid for).
@@ -329,7 +329,7 @@ export function BillingTab() {
                   <span className={expired ? "text-muted-foreground line-through" : ""}>
                     {k.eventsTotal - k.eventsUsed} of {k.eventsTotal} events left
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
                     <CalendarClock className="size-3.5" />
                     {expired ? "Expired" : "Expires"} {new Date(k.expiresAt).toLocaleDateString()}
                   </span>
@@ -408,8 +408,8 @@ export function EmbedTab({ account }: { account: KlokkAccount }) {
   return (
     <div className="space-y-8">
       <Card
-        title="Where your embeds may appear"
-        subtitle="Embeds only load on the websites you list here. Anything else is blocked by the browser."
+        title="Websites that may show your events"
+        subtitle="Your events only show on the websites you add here. Every other website is blocked."
       >
         <div className="flex gap-2">
           <Input
@@ -431,7 +431,7 @@ export function EmbedTab({ account }: { account: KlokkAccount }) {
         </div>
         {domains.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">
-            No domains yet, so no website can show your embeds.
+            No websites added yet, so your events cannot show anywhere.
           </p>
         ) : (
           <ul className="mt-3 space-y-2">
@@ -457,7 +457,7 @@ export function EmbedTab({ account }: { account: KlokkAccount }) {
 
       <Card
         title="Accent colour"
-        subtitle="Applied to the buttons and highlights inside your embeds."
+        subtitle="The colour of the buttons when your event shows on your website."
       >
         <div className="flex items-center gap-3">
           <input
@@ -528,7 +528,7 @@ function ConsentedContactsCard() {
       </div>
       {d.contacts.length > 0 && (
         <div className="mt-4 max-h-80 overflow-auto rounded-xl border border-border">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-sm">
             <thead className="sticky top-0 bg-surface-muted text-muted-foreground">
               <tr>
                 <th className="px-3 py-2 font-medium">Name</th>
@@ -552,7 +552,7 @@ function ConsentedContactsCard() {
           </table>
         </div>
       )}
-      <p className="mt-3 text-xs text-muted-foreground">
+      <p className="mt-3 text-sm text-muted-foreground">
         If someone withdraws, they drop off this list. Remove them from your own systems too.
       </p>
     </Card>
@@ -591,22 +591,21 @@ export function IntegrationsTab() {
     <div className="space-y-8">
       <ConsentedContactsCard />
       <Card
-        title="Your CRMs (HighLevel)"
-        subtitle="Add the people who say you may contact them straight into your own HighLevel account. Save more than one if you run events for different businesses."
+        title="Your contact lists (HighLevel)"
+        subtitle="People who say you may contact them are added to your HighLevel account for you. Add more than one if you run events for different businesses."
       >
         {!data?.available ? (
           <p className="text-sm text-muted-foreground">
-            Connecting your CRM is included with the Organiser and Teams monthly plans. Upgrade in
+            Adding a contact list is included with the Organiser and Teams monthly plans. Upgrade in
             Plan &amp; billing to use it.
           </p>
         ) : (
           <div className="space-y-5">
             <p className="text-sm text-muted-foreground">
-              Participants see a tick box asking whether you may contact them. Only people who tick
-              it are added to a HighLevel account, tagged <code>klokk</code> and{" "}
-              <code>mktg-consent=yes</code>. The default connection is used for any event that has
-              no CRM chosen. You can choose a different one for each event on the event page. You
-              are responsible for how you then contact people, including a working unsubscribe.
+              People replying to your event see a box asking if you may contact them. Only people
+              who tick it are added to your HighLevel account. Events with no list chosen use the
+              one marked Default. You can pick a different list for each event on its page. After
+              that, how you contact people is up to you, so make sure they can unsubscribe.
             </p>
             {conns.map((conn) => (
               <div
@@ -616,20 +615,20 @@ export function IntegrationsTab() {
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-medium text-card-foreground">{conn.label}</p>
                   {conn.isDefault && (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-sm text-primary">
                       Default
                     </span>
                   )}
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-sm text-muted-foreground">
                     {conn.status === "active" ? "Connected" : "Last send failed"}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">Location ID: {conn.locationId}</p>
+                <p className="mt-1 text-sm text-muted-foreground">Location ID: {conn.locationId}</p>
                 {conn.lastError && (
-                  <p className="mt-2 text-xs text-destructive">{conn.lastError}</p>
+                  <p className="mt-2 text-sm text-destructive">{conn.lastError}</p>
                 )}
                 {conn.lastSuccessAt && (
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Last contact added: {new Date(conn.lastSuccessAt).toLocaleString()}
                   </p>
                 )}
@@ -668,20 +667,20 @@ export function IntegrationsTab() {
               </div>
             ))}
             <div className="space-y-3">
-              <p className="text-xs font-semibold text-card-foreground">
-                {conns.length > 0 ? "Add another HighLevel account" : "Connect HighLevel"}
+              <p className="text-sm font-semibold text-card-foreground">
+                {conns.length > 0 ? "Add another HighLevel account" : "Add your HighLevel account"}
               </p>
               <Input
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                placeholder="Name for this CRM, for example Acme Partners"
+                placeholder="A name for this list, for example Acme Partners"
                 maxLength={60}
                 className="bg-card text-card-foreground"
               />
               <Input
                 value={locationId}
                 onChange={(e) => setLocationId(e.target.value)}
-                placeholder="Location ID (Settings → Business Profile)"
+                placeholder="Location ID"
                 className="bg-card text-card-foreground"
               />
               <Input
@@ -689,14 +688,29 @@ export function IntegrationsTab() {
                 autoComplete="off"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                placeholder="Private Integration token"
+                placeholder="Private Integration token (the long key)"
                 className="bg-card text-card-foreground"
               />
-              <p className="text-xs text-muted-foreground">
-                Create the token in HighLevel under Settings → Private Integrations. Give it the
-                contacts write scope only. We store it encrypted and never show it again. Entering a
-                Location ID you already saved replaces its token.
-              </p>
+              <div className="rounded-xl border border-border bg-background p-4 text-sm text-muted-foreground">
+                <p className="font-semibold text-card-foreground">How to find these two things</p>
+                <ol className="mt-2 list-decimal space-y-1 pl-5">
+                  <li>Open your HighLevel account.</li>
+                  <li>
+                    Location ID: go to Settings, then Business Profile. Copy the long code called
+                    Location ID.
+                  </li>
+                  <li>
+                    Private Integration token: go to Settings, then Private Integrations. Make a new
+                    one, tick only the contacts permission that lets it edit contacts, and copy the
+                    key it shows you.
+                  </li>
+                  <li>Paste both above and press Save and test.</li>
+                </ol>
+                <p className="mt-2">
+                  We keep the key safe and never show it again. Adding a Location ID you have
+                  already saved swaps in the new key.
+                </p>
+              </div>
               <Button
                 type="button"
                 onClick={save}
@@ -707,8 +721,8 @@ export function IntegrationsTab() {
             </div>
             {data.recent.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-card-foreground">Recent deliveries</p>
-                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                <p className="text-sm font-semibold text-card-foreground">Recent deliveries</p>
+                <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
                   {data.recent.map((r) => (
                     <li key={r.at}>
                       {new Date(r.at).toLocaleString()}:{" "}

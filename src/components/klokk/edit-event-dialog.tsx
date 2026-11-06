@@ -161,7 +161,7 @@ export function EditEventDialog({ event }: { event: KlokkEvent }) {
           </div>
 
           {!slotsLocked && (added.length > 0 || removed.length > 0) && (
-            <p className="text-xs text-muted-foreground" role="status">
+            <p className="text-sm text-muted-foreground" role="status">
               {added.length > 0 && `${added.length} time${added.length === 1 ? "" : "s"} added. `}
               {removed.length > 0 &&
                 `${removed.length} time${removed.length === 1 ? "" : "s"} removed. `}

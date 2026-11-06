@@ -72,7 +72,7 @@ function SubmissionConfirmed() {
 
       {mySlots.length > 0 && (
         <div className="mx-auto mt-8 max-w-sm rounded-2xl border border-border bg-card p-5 text-left shadow-premium">
-          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
             Your selected times
           </p>
           <ul className="space-y-2">
@@ -105,8 +105,8 @@ function SubmissionConfirmed() {
         </Link>
       </div>
 
-      <p className="mt-8 text-xs text-muted-foreground">
-        Want SMS reminders too? Ask the organiser about Klokk Pro.
+      <p className="mt-8 text-sm text-muted-foreground">
+        Want text message reminders too? Ask the organiser.
       </p>
     </div>
   );

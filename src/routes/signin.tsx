@@ -88,29 +88,29 @@ function SignIn() {
         <p className="mt-1.5 text-sm text-muted-foreground">Sign in to manage your events.</p>
         <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Email</Label>
+            <Label className="text-sm font-medium text-muted-foreground">Email</Label>
             <Input type="email" placeholder="you@studio.co" {...register("email")} />
-            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-medium text-muted-foreground">Password</Label>
+              <Label className="text-sm font-medium text-muted-foreground">Password</Label>
               <Link
                 to="/reset-password"
-                className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
               >
                 Forgot password?
               </Link>
             </div>
             <Input type="password" placeholder="Your password" {...register("password")} />
             {errors.password && (
-              <p className="text-xs text-destructive">{errors.password.message}</p>
+              <p className="text-sm text-destructive">{errors.password.message}</p>
             )}
           </div>
           {unverifiedEmail && (
             <div
               role="alert"
-              className="rounded-lg border border-border bg-surface/60 p-3 text-xs text-foreground"
+              className="rounded-lg border border-border bg-surface/60 p-3 text-sm text-foreground"
             >
               <p className="font-medium">Your email isn't verified yet.</p>
               <p className="mt-1 text-muted-foreground">

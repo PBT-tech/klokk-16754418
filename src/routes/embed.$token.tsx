@@ -58,7 +58,7 @@ function EmbedPage() {
       style={config?.accent ? ({ "--color-accent": config.accent } as React.CSSProperties) : {}}
     >
       <ParticipantResponseView token={token} />
-      <p className="px-4 pb-4 pt-2 text-center text-xs text-muted-foreground">
+      <p className="px-4 pb-4 pt-2 text-center text-sm text-muted-foreground">
         Need to find a time for your own meeting?{" "}
         <a
           href="/signup?ref=embed"

@@ -67,13 +67,13 @@ export function initials(first: string, last = ""): string {
 export function statusLabel(status: string): string {
   switch (status) {
     case "awaiting_responses":
-      return "Awaiting responses";
+      return "Waiting for replies";
     case "ready_to_confirm":
-      return "Ready to confirm";
+      return "Ready to book";
     case "confirmed":
-      return "Confirmed";
+      return "Booked";
     case "expired":
-      return "Expired";
+      return "Replies closed";
     case "cancelled":
       return "Cancelled";
     case "closed":

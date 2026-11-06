@@ -88,8 +88,8 @@ function Settings() {
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "account", label: "Account", icon: <Shield className="size-4" /> },
     { id: "billing", label: "Plan & billing", icon: <CreditCard className="size-4" /> },
-    { id: "embed", label: "Embed", icon: <Globe className="size-4" /> },
-    { id: "integrations", label: "Integrations", icon: <Plug className="size-4" /> },
+    { id: "embed", label: "Your website", icon: <Globe className="size-4" /> },
+    { id: "integrations", label: "Contact lists", icon: <Plug className="size-4" /> },
     { id: "notifications", label: "Notifications", icon: <Bell className="size-4" /> },
   ];
 
@@ -97,7 +97,7 @@ function Settings() {
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
       <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">Settings</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Manage your account, plan and billing, embeds, and notifications.
+        Your details, your plan, showing events on your website, contact lists, and messages.
       </p>
 
       <div className="mt-8 flex flex-wrap gap-1 border-b border-border">
@@ -227,11 +227,11 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
           />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-card-foreground">First name</Label>
+              <Label className="text-sm font-semibold text-card-foreground">First name</Label>
               <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-card-foreground">Last name</Label>
+              <Label className="text-sm font-semibold text-card-foreground">Last name</Label>
               <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </div>
           </div>
@@ -239,7 +239,7 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
           <div className="space-y-4 border-t border-border/60 pt-4">
             <Row label="Email" value={account.email} verified={account.emailVerified} />
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-card-foreground">Update email</Label>
+              <Label className="text-sm font-semibold text-card-foreground">Update email</Label>
               <div className="flex gap-2">
                 <Input value={email} onChange={(e) => setEmail(e.target.value)} />
                 <Button onClick={saveEmail}>Save</Button>
@@ -253,7 +253,7 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
         <CardHeader title="Password" subtitle="Change your password" />
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-card-foreground">Current password</Label>
+            <Label className="text-sm font-semibold text-card-foreground">Current password</Label>
             <Input
               type="password"
               value={currentPassword}
@@ -261,7 +261,7 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-card-foreground">New password</Label>
+            <Label className="text-sm font-semibold text-card-foreground">New password</Label>
             <Input
               type="password"
               value={newPassword}
@@ -365,14 +365,14 @@ function SmsTab({ account }: { account: NonNullable<ReturnType<typeof useCurrent
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-card-foreground">Enable auto-top-up</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Buy 100 credits when balance falls below your threshold.
               </p>
             </div>
             <Switch checked={autoTopUp} onCheckedChange={setAutoTopUp} disabled={isFree} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-card-foreground">Low-balance threshold</Label>
+            <Label className="text-sm text-card-foreground">Low-balance threshold</Label>
             <Input
               type="number"
               min={0}
@@ -397,7 +397,7 @@ function SmsTab({ account }: { account: NonNullable<ReturnType<typeof useCurrent
         ) : (
           <div className="overflow-hidden rounded-xl border border-border">
             <table className="w-full text-sm">
-              <thead className="bg-surface/60 text-xs text-muted-foreground">
+              <thead className="bg-surface/60 text-sm text-muted-foreground">
                 <tr>
                   <th className="px-4 py-2 text-left font-medium">Date</th>
                   <th className="px-4 py-2 text-left font-medium">Recipient</th>
@@ -484,7 +484,7 @@ function NotificationsTab({
         />
         <div className="overflow-hidden rounded-xl border border-border">
           <table className="w-full text-sm">
-            <thead className="bg-surface/60 text-xs text-muted-foreground">
+            <thead className="bg-surface/60 text-sm text-muted-foreground">
               <tr>
                 <th className="px-4 py-2 text-left font-medium">Type</th>
                 <th className="px-4 py-2 text-center font-medium">Email</th>
@@ -496,7 +496,7 @@ function NotificationsTab({
                 <tr key={g.key}>
                   <td className="px-4 py-3">
                     <p className="font-medium text-card-foreground">{g.label}</p>
-                    <p className="text-xs text-muted-foreground">{g.desc}</p>
+                    <p className="text-sm text-muted-foreground">{g.desc}</p>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <Switch
@@ -510,14 +510,14 @@ function NotificationsTab({
                       onCheckedChange={() => toggle(g.key, "sms")}
                       disabled={isFree}
                     />
-                    {isFree && <p className="mt-1 text-[10px] text-muted-foreground">Paid plan</p>}
+                    {isFree && <p className="mt-1 text-xs text-muted-foreground">Paid plan</p>}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <p className="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground">
           <Mail className="size-3.5" />
           Preferences apply to all current and future events.
         </p>
@@ -569,7 +569,7 @@ function Row({ label, value, verified }: { label: string; value: string; verifie
       <span className="flex items-center gap-2 text-sm font-medium text-card-foreground">
         {value}
         {verified && (
-          <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+          <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
             Verified
           </span>
         )}
