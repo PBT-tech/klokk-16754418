@@ -47,7 +47,14 @@ async function roleFor(userId: string): Promise<SystemRole | null> {
       .select("user_id")
       .eq("role", "owner")
       .limit(1);
-    if (!owners || owners.length === 0) {
+    // The bootstrap is one-time: the audit log keeps a permanent record, so it can never
+    // re-run (for example if the only owner later deletes their account).
+    const { data: prior } = await admin
+      .from("system_audit_log")
+      .select("id")
+      .eq("action", "owner_bootstrapped")
+      .limit(1);
+    if ((!owners || owners.length === 0) && (!prior || prior.length === 0)) {
       const { data: page } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
       const users = (page?.users ?? []) as { id: string; created_at: string }[];
       users.sort((x, y) => Date.parse(x.created_at) - Date.parse(y.created_at));
