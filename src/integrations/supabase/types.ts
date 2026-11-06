@@ -81,6 +81,8 @@ export type Database = {
           created_at: string
           external_account_id: string
           id: string
+          is_default: boolean
+          label: string | null
           last_error: string | null
           last_success_at: string | null
           provider: string
@@ -93,6 +95,8 @@ export type Database = {
           created_at?: string
           external_account_id: string
           id?: string
+          is_default?: boolean
+          label?: string | null
           last_error?: string | null
           last_success_at?: string | null
           provider: string
@@ -105,6 +109,8 @@ export type Database = {
           created_at?: string
           external_account_id?: string
           id?: string
+          is_default?: boolean
+          label?: string | null
           last_error?: string | null
           last_success_at?: string | null
           provider?: string
@@ -117,6 +123,7 @@ export type Database = {
       }
       crm_sync_log: {
         Row: {
+          connection_id: string | null
           created_at: string
           error: string | null
           event_id: string | null
@@ -127,6 +134,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          connection_id?: string | null
           created_at?: string
           error?: string | null
           event_id?: string | null
@@ -137,6 +145,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          connection_id?: string | null
           created_at?: string
           error?: string | null
           event_id?: string | null
@@ -251,8 +260,10 @@ export type Database = {
           confirmed_custom_start: string | null
           confirmed_slot_id: string | null
           created_at: string | null
+          crm_connection_id: string | null
           deadline: string
           description: string | null
+          host_name: string | null
           id: string
           location: string | null
           minimum_count: number | null
@@ -271,8 +282,10 @@ export type Database = {
           confirmed_custom_start?: string | null
           confirmed_slot_id?: string | null
           created_at?: string | null
+          crm_connection_id?: string | null
           deadline: string
           description?: string | null
+          host_name?: string | null
           id?: string
           location?: string | null
           minimum_count?: number | null
@@ -291,8 +304,10 @@ export type Database = {
           confirmed_custom_start?: string | null
           confirmed_slot_id?: string | null
           created_at?: string | null
+          crm_connection_id?: string | null
           deadline?: string
           description?: string | null
+          host_name?: string | null
           id?: string
           location?: string | null
           minimum_count?: number | null
@@ -303,7 +318,15 @@ export type Database = {
           title?: string
           token?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_crm_connection_id_fkey"
+            columns: ["crm_connection_id"]
+            isOneToOne: false
+            referencedRelation: "crm_connections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       limit_warnings: {
         Row: {
@@ -587,6 +610,51 @@ export type Database = {
           id?: string
           recipient?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      system_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          detail: Json | null
+          id: string
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
+      system_roles: {
+        Row: {
+          created_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          role?: string
           user_id?: string
         }
         Relationships: []
