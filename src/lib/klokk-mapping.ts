@@ -62,6 +62,8 @@ export function mapEvent(row: any): KlokkEvent {
     title: row.title,
     description: row.description ?? undefined,
     location: row.location ?? undefined,
+    hostName: row.host_name ?? undefined,
+    crmConnectionId: row.crm_connection_id ?? undefined,
     slots: (row.time_slots ?? []).map(mapSlot),
     participationMode: row.participation_mode,
     minimumCount: row.minimum_count ?? undefined,

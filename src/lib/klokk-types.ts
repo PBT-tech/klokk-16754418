@@ -69,6 +69,10 @@ export interface KlokkEvent {
   closedAt?: string;
   /** Public view only: show the "organiser may contact me" tick box. */
   organiserContactOption?: boolean;
+  /** Optional name shown in the participant tick box, for events run with or for others. */
+  hostName?: string;
+  /** Organiser only: the saved CRM connection chosen for this event. */
+  crmConnectionId?: string | undefined;
 }
 
 export type KlokkPlanTier = "free" | "casual" | "organiser" | "teams";

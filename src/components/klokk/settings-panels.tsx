@@ -20,6 +20,7 @@ import {
   useConsentedContacts,
   useCrmStatus,
   useDisconnectCrm,
+  useSetDefaultCrm,
   useUpdateEmbedSettings,
   useUpdateMarketingConsent,
 } from "@/lib/klokk-hooks";
@@ -562,19 +563,23 @@ export function IntegrationsTab() {
   const status = useCrmStatus();
   const connect = useConnectHighLevel();
   const disconnect = useDisconnectCrm();
+  const makeDefault = useSetDefaultCrm();
+  const [label, setLabel] = useState("");
   const [locationId, setLocationId] = useState("");
   const [token, setToken] = useState("");
 
   if (status.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
   const data = status.data;
-  const conn = data?.connection ?? null;
+  const conns = data?.connections ?? [];
 
   const save = () => {
     connect.mutate(
-      { locationId, token },
+      { ...(label.trim() ? { label: label.trim() } : {}), locationId, token },
       {
         onSuccess: () => {
           setToken("");
+          setLabel("");
+          setLocationId("");
           toast.success("HighLevel connected");
         },
         onError: (e) => toast.error(e instanceof Error ? e.message : "Could not connect"),
@@ -586,8 +591,8 @@ export function IntegrationsTab() {
     <div className="space-y-8">
       <ConsentedContactsCard />
       <Card
-        title="HighLevel (your CRM)"
-        subtitle="Add the people who say you may contact them straight into your own HighLevel account."
+        title="Your CRMs (HighLevel)"
+        subtitle="Add the people who say you may contact them straight into your own HighLevel account. Save more than one if you run events for different businesses."
       >
         {!data?.available ? (
           <p className="text-sm text-muted-foreground">
@@ -598,15 +603,27 @@ export function IntegrationsTab() {
           <div className="space-y-5">
             <p className="text-sm text-muted-foreground">
               Participants see a tick box asking whether you may contact them. Only people who tick
-              it are added to your HighLevel account, tagged <code>klokk</code> and{" "}
-              <code>mktg-consent=yes</code>. You are responsible for how you then contact them,
-              including a working unsubscribe.
+              it are added to a HighLevel account, tagged <code>klokk</code> and{" "}
+              <code>mktg-consent=yes</code>. The default connection is used for any event that has
+              no CRM chosen. You can choose a different one for each event on the event page. You
+              are responsible for how you then contact people, including a working unsubscribe.
             </p>
-            {conn && (
-              <div className="rounded-xl border border-border bg-background p-4 text-sm">
-                <p className="font-medium text-card-foreground">
-                  {conn.status === "active" ? "Connected" : "Connected, but the last send failed"}
-                </p>
+            {conns.map((conn) => (
+              <div
+                key={conn.id}
+                className="rounded-xl border border-border bg-background p-4 text-sm"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium text-card-foreground">{conn.label}</p>
+                  {conn.isDefault && (
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                      Default
+                    </span>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {conn.status === "active" ? "Connected" : "Last send failed"}
+                  </span>
+                </div>
                 <p className="mt-1 text-xs text-muted-foreground">Location ID: {conn.locationId}</p>
                 {conn.lastError && (
                   <p className="mt-2 text-xs text-destructive">{conn.lastError}</p>
@@ -616,27 +633,51 @@ export function IntegrationsTab() {
                     Last contact added: {new Date(conn.lastSuccessAt).toLocaleString()}
                   </p>
                 )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                  onClick={() =>
-                    disconnect.mutate(undefined, {
-                      onSuccess: () => toast.success("Disconnected"),
-                      onError: () => toast.error("Could not disconnect"),
-                    })
-                  }
-                >
-                  <Trash2 className="size-4" />
-                  Disconnect
-                </Button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {!conn.isDefault && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={makeDefault.isPending}
+                      onClick={() =>
+                        makeDefault.mutate(conn.id, {
+                          onSuccess: () => toast.success("Default updated"),
+                          onError: () => toast.error("Could not update"),
+                        })
+                      }
+                    >
+                      Make default
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      disconnect.mutate(conn.id, {
+                        onSuccess: () => toast.success("Disconnected"),
+                        onError: () => toast.error("Could not disconnect"),
+                      })
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                    Disconnect
+                  </Button>
+                </div>
               </div>
-            )}
+            ))}
             <div className="space-y-3">
               <p className="text-xs font-semibold text-card-foreground">
-                {conn ? "Replace the connection" : "Connect HighLevel"}
+                {conns.length > 0 ? "Add another HighLevel account" : "Connect HighLevel"}
               </p>
+              <Input
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="Name for this CRM, for example Acme Partners"
+                maxLength={60}
+                className="bg-card text-card-foreground"
+              />
               <Input
                 value={locationId}
                 onChange={(e) => setLocationId(e.target.value)}
@@ -653,7 +694,8 @@ export function IntegrationsTab() {
               />
               <p className="text-xs text-muted-foreground">
                 Create the token in HighLevel under Settings → Private Integrations. Give it the
-                contacts write scope only. We store it encrypted and never show it again.
+                contacts write scope only. We store it encrypted and never show it again. Entering a
+                Location ID you already saved replaces its token.
               </p>
               <Button
                 type="button"

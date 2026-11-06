@@ -22,6 +22,7 @@ import { StatusBadge } from "@/components/klokk/status-badge";
 import { AvailabilityHeatMap, bestSlot } from "@/components/klokk/heat-map";
 import { EventChat } from "@/components/klokk/event-chat";
 import { EmbedPanel } from "@/components/klokk/embed-panel";
+import { EventContactPanel } from "@/components/klokk/event-contact-panel";
 import { EditEventDialog } from "@/components/klokk/edit-event-dialog";
 import { Avatar } from "@/components/klokk/avatar";
 import {
@@ -399,6 +400,11 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
           <section id="embed" tabIndex={-1} className="scroll-mt-6 outline-none">
             <SectionTitle>Embed on a website</SectionTitle>
             <EmbedPanel event={event} account={account} />
+          </section>
+
+          <section id="contact" tabIndex={-1} className="scroll-mt-6 outline-none">
+            <SectionTitle>Contact settings</SectionTitle>
+            <EventContactPanel event={event} account={account} />
           </section>
 
           <section>

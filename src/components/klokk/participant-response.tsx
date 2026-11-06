@@ -404,9 +404,9 @@ export function ParticipantResponseView({ token }: { token: string }) {
                     className="mt-0.5"
                   />
                   <span>
-                    The organiser of this event may contact me about other events, marketing,
-                    newsletters and similar, and may keep my details in their own customer system. I
-                    can unsubscribe at any time.
+                    {event.hostName ? event.hostName : "The organiser of this event"} may contact me
+                    about other events, marketing, newsletters and similar, and may keep my details
+                    in their own customer system. I can unsubscribe at any time.
                   </span>
                 </label>
               )}

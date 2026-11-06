@@ -19,7 +19,7 @@ import type { KlokkEvent, ParticipantResponse } from "./klokk-types";
 
 // Explicit columns only: never owner_id, billing or internal fields.
 const PUBLIC_EVENT_SELECT = `
-  id, owner_id, token, title, description, location, participation_mode, minimum_count, deadline, status,
+  id, owner_id, token, title, description, location, host_name, participation_mode, minimum_count, deadline, status,
   confirmed_slot_id, confirmed_custom_date, confirmed_custom_start, confirmed_custom_end,
   confirmed_at, created_at, closed_at,
   time_slots ( id, date, start_time, end_time ),
@@ -126,6 +126,7 @@ function toPublicEvent(row: any, embedded: boolean, organiserContactOption: bool
     ...event,
     // Whether to show the "organiser may contact me" tick box (never exposes who or where).
     organiserContactOption,
+    crmConnectionId: undefined,
     // Embed viewers must never learn the event's secret link token.
     token: embedded ? "" : event.token,
     // Named participants: names only, never emails.
