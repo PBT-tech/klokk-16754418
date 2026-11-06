@@ -279,7 +279,7 @@ export const submitResponse = createServerFn({ method: "POST" })
     const cap = participantCapForPlan(owner?.plan);
     const { data: existing } = await client
       .from("participant_responses")
-      .select("id, edit_token_hash, klokk_marketing_consent, organiser_marketing_consent")
+      .select("id, edit_token_hash, phone, klokk_marketing_consent, organiser_marketing_consent")
       .eq("event_id", event.id)
       .eq("email", email)
       .maybeSingle();
@@ -362,6 +362,7 @@ export const submitResponse = createServerFn({ method: "POST" })
             recipientEmail: email,
             recipientFirstName: data.firstName.trim(),
             recipientLastName: data.lastName.trim(),
+            recipientPhone: newPhone ?? (existing?.phone as string | undefined) ?? undefined,
           },
           data.klokkConsent,
         );
@@ -379,7 +380,7 @@ export const submitResponse = createServerFn({ method: "POST" })
             firstName: data.firstName.trim(),
             lastName: data.lastName.trim(),
             email,
-            phone: newPhone,
+            phone: newPhone ?? (existing?.phone as string | null | undefined) ?? null,
             eventTitle: event.title,
           },
         });
@@ -434,6 +435,7 @@ export const submitResponse = createServerFn({ method: "POST" })
           recipientEmail: email,
           recipientFirstName: data.firstName,
           recipientLastName: data.lastName,
+          recipientPhone: newPhone ?? undefined,
           event: fullEvent,
           organiserName,
           origin: await (await import("./klokk-origin.server")).appOrigin(),

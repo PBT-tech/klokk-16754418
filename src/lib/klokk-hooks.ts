@@ -40,6 +40,9 @@ import {
   setUserPlan,
   deleteSystemUser,
   listSystemAudit,
+  getSystemOverview,
+  addEventCredits,
+  removeEventCredits,
 } from "./klokk-owner.functions";
 import { getEditToken } from "./klokk-edit-token";
 import { claimOrder, getMyBilling } from "./klokk-billing.functions";
@@ -418,6 +421,35 @@ export function useSetUserPlan() {
   return useMutation({
     mutationFn: (input: { userId: string; plan: "free" | "casual" | "organiser" | "teams" }) =>
       fn({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["klokk-system-users"] });
+      qc.invalidateQueries({ queryKey: ["klokk-system-audit"] });
+    },
+  });
+}
+
+export function useSystemOverview(enabled: boolean) {
+  const fn = useServerFn(getSystemOverview);
+  return useQuery({ queryKey: ["klokk-system-overview"], queryFn: () => fn(), enabled });
+}
+
+export function useAddEventCredits() {
+  const qc = useQueryClient();
+  const fn = useServerFn(addEventCredits);
+  return useMutation({
+    mutationFn: (input: { userId: string; count: number }) => fn({ data: input }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["klokk-system-users"] });
+      qc.invalidateQueries({ queryKey: ["klokk-system-audit"] });
+    },
+  });
+}
+
+export function useRemoveEventCredits() {
+  const qc = useQueryClient();
+  const fn = useServerFn(removeEventCredits);
+  return useMutation({
+    mutationFn: (userId: string) => fn({ data: { userId } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["klokk-system-users"] });
       qc.invalidateQueries({ queryKey: ["klokk-system-audit"] });

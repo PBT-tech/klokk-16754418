@@ -1271,6 +1271,7 @@ export const listConsentedContacts = createServerFn({ method: "GET" })
       name: `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim(),
       email: r.email as string,
       phone: (r.phone as string | null) ?? null,
+      eventId: r.event_id as string,
       eventTitle: titles.get(r.event_id) ?? "",
       consentedAt: (r.consent_recorded_at as string | null) ?? null,
     }));

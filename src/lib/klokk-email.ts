@@ -4,6 +4,7 @@
 //
 // Custom field IDs (registered via the form-tracking integration):
 import type { KlokkEvent } from "./klokk-types";
+import { toInternationalPhone } from "./klokk-phone";
 import { confirmedTimeLabel } from "./klokk-format";
 
 const ENDPOINT = "https://backend.leadconnectorhq.com/external-tracking/events";
@@ -67,6 +68,8 @@ interface BasePayload {
   recipientEmail: string;
   recipientFirstName: string;
   recipientLastName: string;
+  /** Optional. Sent as the contact's phone number when given. */
+  recipientPhone?: string | undefined;
 }
 
 interface EventPayload extends BasePayload {
@@ -90,6 +93,11 @@ function postEvent(
     last_name: "Last name",
     email: "Email",
   };
+  const phone = toInternationalPhone(payload.recipientPhone);
+  if (phone) {
+    formData["phone"] = phone;
+    formLabels["phone"] = "Phone";
+  }
 
   for (const [key, field] of Object.entries(customFields)) {
     if (field.value === undefined || field.value === null) continue;

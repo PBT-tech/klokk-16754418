@@ -490,12 +490,15 @@ function csvCell(v: string): string {
 
 function ConsentedContactsCard() {
   const q = useConsentedContacts();
+  const [eventId, setEventId] = useState("all");
   const d = q.data;
   if (!d?.available) return null;
+  const events = [...new Map(d.contacts.map((c) => [c.eventId, c.eventTitle])).entries()];
+  const shown = eventId === "all" ? d.contacts : d.contacts.filter((c) => c.eventId === eventId);
   const download = () => {
     const lines = [
       ["Name", "Email", "Mobile", "Event", "Agreed on"].map(csvCell).join(","),
-      ...d.contacts.map((c) =>
+      ...shown.map((c) =>
         [c.name, c.email, c.phone ?? "", c.eventTitle, c.consentedAt ?? ""].map(csvCell).join(","),
       ),
     ];
@@ -513,20 +516,35 @@ function ConsentedContactsCard() {
     >
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-card-foreground">
-          <span className="font-display text-2xl font-semibold">{d.total}</span>{" "}
-          {d.total === 1 ? "person" : "people"}
+          <span className="font-display text-2xl font-semibold">{shown.length}</span>{" "}
+          {shown.length === 1 ? "person" : "people"}
         </p>
+        {events.length > 1 && (
+          <select
+            value={eventId}
+            onChange={(e) => setEventId(e.target.value)}
+            className="h-9 max-w-[14rem] rounded-md border border-input bg-background px-2 text-sm text-foreground"
+            aria-label="Show people from"
+          >
+            <option value="all">All my events</option>
+            {events.map(([id, title]) => (
+              <option key={id} value={id}>
+                {title}
+              </option>
+            ))}
+          </select>
+        )}
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={download}
-          disabled={d.total === 0}
+          disabled={shown.length === 0}
         >
           Download CSV
         </Button>
       </div>
-      {d.contacts.length > 0 && (
+      {shown.length > 0 && (
         <div className="mt-4 max-h-80 overflow-auto rounded-xl border border-border">
           <table className="w-full text-left text-sm">
             <thead className="sticky top-0 bg-surface-muted text-muted-foreground">
@@ -538,7 +556,7 @@ function ConsentedContactsCard() {
               </tr>
             </thead>
             <tbody>
-              {d.contacts.slice(0, 200).map((c) => (
+              {shown.slice(0, 200).map((c) => (
                 <tr key={`${c.email}-${c.eventTitle}`} className="border-t border-border">
                   <td className="px-3 py-2 text-card-foreground">{c.name}</td>
                   <td className="px-3 py-2 text-card-foreground">{c.email}</td>

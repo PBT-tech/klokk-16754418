@@ -97,11 +97,26 @@ export const listSystemUsers = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(2000);
     if (error) throw error;
-    const [{ data: events }, { data: conns }, { data: roles }] = await Promise.all([
-      admin.from("events").select("owner_id").limit(50000),
-      admin.from("crm_connections").select("user_id"),
-      admin.from("system_roles").select("user_id, role"),
-    ]);
+    const [{ data: events }, { data: conns }, { data: roles }, { data: packs }, authPage] =
+      await Promise.all([
+        admin.from("events").select("owner_id").limit(50000),
+        admin.from("crm_connections").select("user_id"),
+        admin.from("system_roles").select("user_id, role"),
+        admin
+          .from("event_credit_packs")
+          .select("user_id, events_total, events_used, expires_at")
+          .gt("expires_at", new Date().toISOString()),
+        admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+      ]);
+    const lastSeen = new Map<string, string>();
+    for (const u of (authPage?.data?.users ?? []) as any[]) {
+      if (u.last_sign_in_at) lastSeen.set(u.id as string, u.last_sign_in_at as string);
+    }
+    const credits = new Map<string, number>();
+    for (const k of (packs ?? []) as any[]) {
+      const left = Number(k.events_total) - Number(k.events_used);
+      if (left > 0) credits.set(k.user_id, (credits.get(k.user_id) ?? 0) + left);
+    }
     const eventCount = new Map<string, number>();
     for (const e of (events ?? []) as any[]) {
       eventCount.set(e.owner_id, (eventCount.get(e.owner_id) ?? 0) + 1);
@@ -121,7 +136,111 @@ export const listSystemUsers = createServerFn({ method: "GET" })
       marketingConsent: p.marketing_consent === true,
       crmConnected: crm.has(p.id),
       systemRole: roleOf.get(p.id) ?? null,
+      lastSeen: lastSeen.get(p.id) ?? null,
+      creditsLeft: credits.get(p.id) ?? 0,
     }));
+  });
+
+/** Whole-system numbers for the top of the owner console. */
+export const getSystemOverview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireOwner(context.userId);
+    const admin = await db();
+    const monthStart = new Date();
+    monthStart.setUTCDate(1);
+    monthStart.setUTCHours(0, 0, 0, 0);
+    const head = (q: any) => q.then((r: any) => (r.count as number | null) ?? 0);
+    const [events, responsesMonth, responsesAll, klokkOk, organiserOk] = await Promise.all([
+      head(admin.from("events").select("id", { count: "exact", head: true })),
+      head(
+        admin
+          .from("participant_responses")
+          .select("id", { count: "exact", head: true })
+          .gte("submitted_at", monthStart.toISOString()),
+      ),
+      head(admin.from("participant_responses").select("id", { count: "exact", head: true })),
+      head(
+        admin
+          .from("participant_responses")
+          .select("id", { count: "exact", head: true })
+          .eq("klokk_marketing_consent", true),
+      ),
+      head(
+        admin
+          .from("participant_responses")
+          .select("id", { count: "exact", head: true })
+          .eq("organiser_marketing_consent", true),
+      ),
+    ]);
+    return { events, responsesMonth, responsesAll, klokkOk, organiserOk };
+  });
+
+/** Give a user extra event credits (a pack that expires in 3 months). */
+export const addEventCredits = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ userId: z.string().uuid(), count: z.number().int().min(1).max(100) }))
+  .handler(async ({ data, context }) => {
+    await requireOwner(context.userId);
+    const admin = await db();
+    const { data: target } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("id", data.userId)
+      .maybeSingle();
+    if (!target) throw new Error("User not found");
+    const expires = new Date();
+    expires.setMonth(expires.getMonth() + 3);
+    const { error } = await admin.from("event_credit_packs").insert({
+      user_id: data.userId,
+      order_id: `owner-grant-${crypto.randomUUID()}`,
+      events_total: data.count,
+      events_used: 0,
+      expires_at: expires.toISOString(),
+    });
+    if (error) throw error;
+    await admin.from("system_audit_log").insert({
+      actor_id: context.userId,
+      action: "credits_added",
+      target_user_id: data.userId,
+      detail: { count: data.count },
+    });
+    return { ok: true };
+  });
+
+/** Take away a user's unused event credits (credits already used stay used). */
+export const removeEventCredits = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(z.object({ userId: z.string().uuid() }))
+  .handler(async ({ data, context }) => {
+    await requireOwner(context.userId);
+    const admin = await db();
+    const { data: packs } = await admin
+      .from("event_credit_packs")
+      .select("id, events_total, events_used")
+      .eq("user_id", data.userId)
+      .gt("expires_at", new Date().toISOString());
+    let removed = 0;
+    for (const k of (packs ?? []) as any[]) {
+      const left = Number(k.events_total) - Number(k.events_used);
+      if (left <= 0) continue;
+      removed += left;
+      if (Number(k.events_used) === 0) {
+        await admin.from("event_credit_packs").delete().eq("id", k.id);
+      } else {
+        await admin
+          .from("event_credit_packs")
+          .update({ events_total: k.events_used })
+          .eq("id", k.id);
+      }
+    }
+    await admin.from("system_audit_log").insert({
+      actor_id: context.userId,
+      action: "credits_removed",
+      target_user_id: data.userId,
+      detail: { count: removed },
+    });
+    return { ok: true, removed };
   });
 
 export const setUserPlan = createServerFn({ method: "POST" })
