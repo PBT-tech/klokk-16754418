@@ -29,33 +29,29 @@ async function roleFor(userId: string): Promise<SystemRole | null> {
     .maybeSingle();
   if (row?.role) return row.role as SystemRole;
 
-  const { data: prof } = await admin
-    .from("profiles")
-    .select("email")
-    .eq("id", userId)
-    .maybeSingle();
+  // Identity comes from Supabase Auth (users cannot edit it), never from the profiles table,
+  // which a signed-in user can write to.
+  const { data: authData } = await admin.auth.admin.getUserById(userId);
+  const authUser = authData?.user;
   const listed = (process.env["SYSTEM_OWNER_EMAILS"] ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
-  const email = ((prof?.email as string | null) ?? "").toLowerCase();
+  const email = authUser?.email_confirmed_at ? (authUser.email ?? "").toLowerCase() : "";
   let becomeOwner = !!email && listed.includes(email);
 
-  if (!becomeOwner) {
-    // No owner yet: the earliest account is the owner. Once any owner exists this never runs.
+  if (!becomeOwner && authUser?.created_at) {
+    // No owner yet: the earliest Auth account is the owner. Once any owner exists this never runs.
     const { data: owners } = await admin
       .from("system_roles")
       .select("user_id")
       .eq("role", "owner")
       .limit(1);
     if (!owners || owners.length === 0) {
-      const { data: first } = await admin
-        .from("profiles")
-        .select("id")
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      becomeOwner = first?.id === userId;
+      const { data: page } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const users = (page?.users ?? []) as { id: string; created_at: string }[];
+      users.sort((x, y) => Date.parse(x.created_at) - Date.parse(y.created_at));
+      becomeOwner = users[0]?.id === userId;
     }
   }
   if (!becomeOwner) return null;
