@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { plainError } from "@/lib/klokk-errors";
 import { useEffect, useState } from "react";
 import {
   AlertTriangle,
@@ -161,7 +162,7 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
     }
     const { error } = await supabase.auth.updateUser({ email: email.trim() });
     if (error) {
-      toast.error(error.message);
+      toast.error(plainError(error, "Something went wrong. Please try again."));
       return;
     }
     toast.success("Email updated — check your inbox to confirm");
@@ -182,7 +183,7 @@ function AccountTab({ account }: { account: ReturnType<typeof useCurrentAccount>
     }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
-      toast.error(error.message);
+      toast.error(plainError(error, "Something went wrong. Please try again."));
       return;
     }
     setCurrentPassword("");

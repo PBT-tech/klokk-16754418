@@ -526,7 +526,7 @@ export const reportEmbedInteraction = createServerFn({ method: "POST" })
  */
 async function getEmbedFrameConfig(
   rawToken: string,
-): Promise<{ frameAncestors: string; accent: string | null } | null> {
+): Promise<{ frameAncestors: string; accent: string | null; hideSignupPrompt: boolean } | null> {
   if (!rawToken.startsWith("emb.")) return null;
   const { eventToken } = await resolveToken(rawToken);
   const client = await admin();
@@ -538,12 +538,13 @@ async function getEmbedFrameConfig(
   if (!ev) return null;
   const { data: prof } = await client
     .from("profiles")
-    .select("embed_settings")
+    .select("embed_settings, plan")
     .eq("id", ev.owner_id)
     .maybeSingle();
   const settings = (prof?.embed_settings ?? {}) as {
     domainAllowlist?: string[];
     accentOverride?: string;
+    hideSignupPrompt?: boolean;
   };
   const hosts = frameAncestorHosts(settings.domainAllowlist ?? []).map((h) => `https://${h}`);
   const accent =
@@ -551,7 +552,12 @@ async function getEmbedFrameConfig(
       ? settings.accentOverride
       : null;
   // No allow-list means nobody may frame it: the organiser must opt in per domain.
-  return { frameAncestors: hosts.length > 0 ? hosts.join(" ") : "'none'", accent };
+  const paid = prof?.plan === "organiser" || prof?.plan === "teams";
+  return {
+    frameAncestors: hosts.length > 0 ? hosts.join(" ") : "'none'",
+    accent,
+    hideSignupPrompt: paid && settings.hideSignupPrompt === true,
+  };
 }
 
 export const getEmbedConfig = createServerFn({ method: "GET" })

@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { plainError } from "@/lib/klokk-errors";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -175,8 +176,7 @@ function OwnerPage() {
                           { userId: u.id, plan: next },
                           {
                             onSuccess: () => toast.success("Plan updated"),
-                            onError: (err) =>
-                              toast.error(err instanceof Error ? err.message : "Could not update"),
+                            onError: (err) => toast.error(plainError(err, "Could not update")),
                           },
                         );
                       }}
@@ -206,8 +206,7 @@ function OwnerPage() {
                           { userId: u.id, count: n },
                           {
                             onSuccess: () => toast.success("Credits added"),
-                            onError: (err) =>
-                              toast.error(err instanceof Error ? err.message : "Could not add"),
+                            onError: (err) => toast.error(plainError(err, "Could not add")),
                           },
                         );
                       }}
@@ -228,8 +227,7 @@ function OwnerPage() {
                             return;
                           removeCredits.mutate(u.id, {
                             onSuccess: () => toast.success("Credits removed"),
-                            onError: (err) =>
-                              toast.error(err instanceof Error ? err.message : "Could not remove"),
+                            onError: (err) => toast.error(plainError(err, "Could not remove")),
                           });
                         }}
                       >
@@ -259,8 +257,7 @@ function OwnerPage() {
                             return;
                           del.mutate(u.id, {
                             onSuccess: () => toast.success("Account deleted"),
-                            onError: (err) =>
-                              toast.error(err instanceof Error ? err.message : "Could not delete"),
+                            onError: (err) => toast.error(plainError(err, "Could not delete")),
                           });
                         }}
                       >

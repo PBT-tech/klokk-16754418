@@ -23,6 +23,28 @@ function Page() {
       <p className="mt-2 text-xs text-muted-foreground">
         Draft for legal review · Last updated 6 November 2026
       </p>
+      <div className="mt-6 rounded-xl border border-border bg-card p-4 text-card-foreground">
+        <p className="font-display text-base font-semibold">In plain words</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+          <li>
+            We keep your name, email, the times you pick, and your mobile number if you give it, so
+            your meeting can be arranged.
+          </li>
+          <li>
+            The two tick boxes are optional and start unticked. Only if you tick one will Klokk, or
+            the organiser, send you marketing.
+          </li>
+          <li>
+            You can change your mind at any time by unticking the box or using the unsubscribe link.
+          </li>
+          <li>
+            Events on the free plan are deleted after 90 days. Events on paid plans are deleted 12
+            months after they close.
+          </li>
+          <li>You can ask us to show you, fix or delete your information whenever you like.</li>
+        </ul>
+        <p className="mt-2 text-sm text-muted-foreground">The full wording is below.</p>
+      </div>
       <div className="mt-8 space-y-4 text-sm leading-relaxed text-muted-foreground">
         <p>
           Klokk is operated by Pegasus Apps (Canberra, Australia). We handle personal information in

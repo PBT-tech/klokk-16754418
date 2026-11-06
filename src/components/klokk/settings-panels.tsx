@@ -371,10 +371,13 @@ export function EmbedTab({ account }: { account: KlokkAccount }) {
   const [domains, setDomains] = useState<string[]>(initial?.domainAllowlist ?? []);
   const [draft, setDraft] = useState("");
   const [accent, setAccent] = useState(initial?.accentOverride ?? "#c9a84c");
+  const [hidePrompt, setHidePrompt] = useState(initial?.hideSignupPrompt === true);
+  const paid = account.plan === "organiser" || account.plan === "teams";
 
   useEffect(() => {
     setDomains(initial?.domainAllowlist ?? []);
     setAccent(initial?.accentOverride ?? "#c9a84c");
+    setHidePrompt(initial?.hideSignupPrompt === true);
   }, [initial]);
 
   const addDomain = () => {
@@ -397,7 +400,14 @@ export function EmbedTab({ account }: { account: KlokkAccount }) {
       return;
     }
     update.mutate(
-      { settings: { accentOverride: accent, domainAllowlist: domains, embedExpiry: "" } },
+      {
+        settings: {
+          accentOverride: accent,
+          domainAllowlist: domains,
+          embedExpiry: "",
+          hideSignupPrompt: paid && hidePrompt,
+        },
+      },
       {
         onSuccess: () => toast.success("Embed settings saved"),
         onError: () => toast.error("Could not save"),
@@ -473,6 +483,27 @@ export function EmbedTab({ account }: { account: KlokkAccount }) {
             className="max-w-[9rem] bg-card text-card-foreground"
           />
         </div>
+      </Card>
+
+      <Card
+        title="Sign-up line under your event"
+        subtitle="Under each event on your website, Klokk shows a line inviting people to make their own free account."
+      >
+        {paid ? (
+          <label className="flex items-center gap-3 text-sm text-card-foreground">
+            <input
+              type="checkbox"
+              checked={hidePrompt}
+              onChange={(e) => setHidePrompt(e.target.checked)}
+              className="h-5 w-5"
+            />
+            Hide that line on my website
+          </label>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Organiser and Teams plans can hide this line.
+          </p>
+        )}
       </Card>
 
       <Button onClick={save} disabled={update.isPending} className="shadow-premium">

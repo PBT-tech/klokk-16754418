@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { plainError } from "@/lib/klokk-errors";
 import { useEffect, useState } from "react";
 import { ArrowRight, Check, CheckCircle2, Clock } from "lucide-react";
 import { toast } from "sonner";
@@ -209,7 +210,7 @@ export function ParticipantResponseView({ token }: { token: string }) {
         });
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not submit");
+      toast.error(plainError(err, "Could not submit"));
     }
   };
 

@@ -849,14 +849,26 @@ export const updateEmbedSettings = createServerFn({ method: "POST" })
           .array(z.string().refine(isAllowedDomain, "Not an allowed website entry"))
           .max(25),
         embedExpiry: z.string().max(40).optional(),
+        hideSignupPrompt: z.boolean().optional(),
       }),
     }),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    // Only paid monthly plans may hide the sign-up line; anyone else is saved with it shown.
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", userId)
+      .maybeSingle();
+    const paid = prof?.plan === "organiser" || prof?.plan === "teams";
+    const settings = {
+      ...data.settings,
+      hideSignupPrompt: paid && data.settings.hideSignupPrompt === true,
+    };
     const { error } = await supabase
       .from("profiles")
-      .update({ embed_settings: data.settings })
+      .update({ embed_settings: settings })
       .eq("id", userId);
     if (error) throw error;
     return { ok: true };

@@ -20,7 +20,7 @@ export function CaseStudies() {
       icon: TrendingUp,
       kicker: "From days to hours",
       title: "The sales team that stopped wasting Mondays",
-      body: "A six-person sales team used to burn half of Monday just finding a time to talk. With Klokk, their average time-to-meeting dropped from four days to under two hours.",
+      body: "A six-person sales team used to burn half of Monday just finding a time to talk. With Klokk, the time it took to agree a meeting dropped from four days to under two hours.",
     },
   ];
   return (

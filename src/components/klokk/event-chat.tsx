@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { plainError } from "@/lib/klokk-errors";
 import { Pin, PinOff, Send } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,8 +37,7 @@ export function EventChat({
       },
       {
         onSuccess: () => setText(""),
-        onError: (err) =>
-          toast.error(err instanceof Error ? err.message : "Could not send message"),
+        onError: (err) => toast.error(plainError(err, "Could not send message")),
       },
     );
   };

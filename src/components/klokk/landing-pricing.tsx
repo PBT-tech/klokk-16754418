@@ -41,32 +41,32 @@ export function Pricing() {
                 Free (Trial)
               </div>
               <p className="mt-3 font-display text-4xl font-bold text-pricing-amount">$0 AUD</p>
-              <p className="mt-1 text-sm text-muted-foreground">3 lifetime events total</p>
+              <p className="mt-1 text-sm text-muted-foreground">3 events in total, free</p>
               <div className="my-5 h-px bg-border/70" />
               <ul className="space-y-2.5 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-pricing-bullet font-medium">✓</span>
                   <span>
-                    <strong>3 lifetime events</strong> total
+                    <strong>3 events</strong> in total
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-pricing-bullet font-medium">✓</span>
                   <span>
-                    <strong>35 participants</strong> per event (hard cap)
+                    <strong>Up to 35 people</strong> can reply to each event
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-pricing-bullet font-medium">✓</span>
-                  <span>1 organiser seat</span>
+                  <span>1 person can run events</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-pricing-bullet font-medium">✓</span>
-                  <span>Live availability heat map</span>
+                  <span>See at a glance when most people are free</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-pricing-bullet font-medium">✓</span>
-                  <span>Branded email notifications</span>
+                  <span>Emails with your event details</span>
                 </li>
               </ul>
             </div>
@@ -115,16 +115,16 @@ export function Pricing() {
                 <li className="flex items-start gap-2">
                   <span className="text-pricing-bullet font-medium">✓</span>
                   <span>
-                    <strong>35 participants</strong> included per event
+                    <strong>35 people</strong> can reply to each event
                   </span>
                 </li>
                 <li className="flex items-start gap-2 text-accent">
                   <span className="font-medium">+</span>
-                  <span>If you need to invite more participants - in blocks of 5</span>
+                  <span>Need more people? Add them 5 at a time</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-pricing-bullet font-medium">✓</span>
-                  <span>1 organiser seat</span>
+                  <span>1 person can run events</span>
                 </li>
               </ul>
             </div>
@@ -160,20 +160,20 @@ export function Pricing() {
                 <li className="flex items-start gap-2">
                   <span className="text-accent font-medium">✓</span>
                   <span>
-                    <strong>Up to 80 participants</strong> per event
+                    <strong>Up to 80 people</strong> can reply to each event
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-accent font-medium">✓</span>
-                  <span>1 organiser seat</span>
+                  <span>1 person can run events</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-accent font-medium">✓</span>
-                  <span>Real-time availability heat map</span>
+                  <span>See at a glance when most people are free</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-accent font-medium">✓</span>
-                  <span>Event chat (P12) &amp; embed widget</span>
+                  <span>Event chat, and put events on your website</span>
                 </li>
               </ul>
             </div>
@@ -204,7 +204,7 @@ export function Pricing() {
                 <li className="flex items-start gap-2">
                   <span className="text-pricing-bullet font-medium">✓</span>
                   <span>
-                    <strong>Base includes 3 organiser seats</strong>
+                    <strong>3 people</strong> on your team can run events
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
@@ -216,12 +216,12 @@ export function Pricing() {
                 <li className="flex items-start gap-2">
                   <span className="text-pricing-bullet font-medium">✓</span>
                   <span>
-                    <strong>Unlimited participants</strong> per event
+                    <strong>Any number of people</strong> can reply to each event
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-pricing-bullet font-medium">✓</span>
-                  <span>Shared workspace &amp; team coordination</span>
+                  <span>One shared place for your team</span>
                 </li>
               </ul>
             </div>
@@ -242,30 +242,28 @@ export function Pricing() {
                   Casual Plan
                 </span>
                 <h4 className="font-display text-base font-semibold text-foreground">
-                  Participant Overage on Casual Packs
+                  Extra people on the Casual plan
                 </h4>
               </div>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground max-w-2xl">
-                Charged per event, per block of 5 additional participants above the 35 included.
-                Overage is calculated per individual event, not accumulated across account or pack:
+                Charged for every 5 extra people after the first 35. Counted separately for each
+                event:
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 shrink-0">
               <div className="rounded-xl border border-border bg-surface/50 p-3 text-center">
-                <p className="text-sm font-medium text-muted-foreground">
-                  1–3 Blocks (36–50 guests)
-                </p>
+                <p className="text-sm font-medium text-muted-foreground">36 to 50 people</p>
                 <p className="mt-1 font-display text-lg font-bold text-casual-block-price">
-                  $6.20 AUD each block
+                  $6.20 AUD
                 </p>
-                <p className="text-sm text-muted-foreground">5 participants per block</p>
+                <p className="text-sm text-muted-foreground">for every 5 extra people</p>
               </div>
               <div className="rounded-xl border border-border bg-surface/50 p-3 text-center">
-                <p className="text-sm font-medium text-muted-foreground">4+ Blocks (51+ guests)</p>
+                <p className="text-sm font-medium text-muted-foreground">More than 50 people</p>
                 <p className="mt-1 font-display text-lg font-bold text-casual-block-price">
-                  $5.30 AUD each block
+                  $5.30 AUD
                 </p>
-                <p className="text-sm text-muted-foreground">5 participants per block</p>
+                <p className="text-sm text-muted-foreground">for every 5 extra people</p>
               </div>
             </div>
           </div>
