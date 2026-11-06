@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { plainError } from "@/lib/klokk-errors";
 import { Camera, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -99,7 +100,7 @@ export function AvatarUpload({
       toast.success("Photo updated");
     } catch (err) {
       setPreview(currentUrl);
-      toast.error(err instanceof Error ? err.message : "Could not upload photo");
+      toast.error(plainError(err, "Could not upload photo"));
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -114,7 +115,7 @@ export function AvatarUpload({
       toast.success("Photo removed");
     } catch (err) {
       setPreview(currentUrl);
-      toast.error(err instanceof Error ? err.message : "Could not remove photo");
+      toast.error(plainError(err, "Could not remove photo"));
     } finally {
       setBusy(false);
     }

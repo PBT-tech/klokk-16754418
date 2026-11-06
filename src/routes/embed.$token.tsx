@@ -58,17 +58,19 @@ function EmbedPage() {
       style={config?.accent ? ({ "--color-accent": config.accent } as React.CSSProperties) : {}}
     >
       <ParticipantResponseView token={token} />
-      <p className="px-4 pb-4 pt-2 text-center text-sm text-muted-foreground">
-        Need to find a time for your own meeting?{" "}
-        <a
-          href="/signup?ref=embed"
-          target="_blank"
-          rel="noopener"
-          className="font-medium text-primary underline underline-offset-4"
-        >
-          Create your free Klokk account
-        </a>
-      </p>
+      {!config?.hideSignupPrompt && (
+        <p className="px-4 pb-4 pt-2 text-center text-sm text-muted-foreground">
+          Need to find a time for your own meeting?{" "}
+          <a
+            href="/signup?ref=embed"
+            target="_blank"
+            rel="noopener"
+            className="font-medium text-primary underline underline-offset-4"
+          >
+            Create your free Klokk account
+          </a>
+        </p>
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { plainError } from "@/lib/klokk-errors";
 import { useMemo, useState } from "react";
 import {
   ArrowLeft,
@@ -120,7 +121,7 @@ export function CreateEventFlow({
       setCreated(created);
       toast.success("Event created");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create event");
+      toast.error(plainError(err, "Could not create event"));
     }
   };
 

@@ -9,6 +9,7 @@
 // the browser except the connection status.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { toInternationalPhone } from "./klokk-phone";
 
 const HL = "https://services.leadconnectorhq.com";
 
@@ -127,7 +128,7 @@ async function setHighLevelConsent(
       firstName: p.firstName,
       lastName: p.lastName,
       email: p.email,
-      ...(p.phone ? { phone: p.phone } : {}),
+      ...(toInternationalPhone(p.phone) ? { phone: toInternationalPhone(p.phone) } : {}),
       source: "Klokk",
       tags: consent ? ["klokk", TAG_YES] : ["klokk", TAG_NO],
     }),

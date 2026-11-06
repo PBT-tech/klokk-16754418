@@ -20,6 +20,19 @@ function Page() {
       <p className="mt-2 text-xs text-muted-foreground">
         Draft for legal review · Last updated 5 November 2026
       </p>
+      <div className="mt-6 rounded-xl border border-border bg-card p-4 text-card-foreground">
+        <p className="font-display text-base font-semibold">In plain words</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+          <li>Klokk helps a group find a meeting time that suits most people.</li>
+          <li>Use it fairly: no spam, no looking at other people's events, nothing unlawful.</li>
+          <li>Prices and limits are on the pricing page.</li>
+          <li>
+            If you send people's details to a host's customer system, you must have that host's
+            permission.
+          </li>
+        </ul>
+        <p className="mt-2 text-sm text-muted-foreground">The full wording is below.</p>
+      </div>
       <div className="mt-8 space-y-4 text-sm leading-relaxed text-muted-foreground">
         <p>
           By using Klokk you agree to these terms. Klokk is provided by Pegasus Apps ("we", "us").

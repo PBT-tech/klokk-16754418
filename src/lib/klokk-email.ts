@@ -4,6 +4,7 @@
 //
 // Custom field IDs (registered via the form-tracking integration):
 import type { KlokkEvent } from "./klokk-types";
+import { toInternationalPhone } from "./klokk-phone";
 import { confirmedTimeLabel } from "./klokk-format";
 
 const ENDPOINT = "https://backend.leadconnectorhq.com/external-tracking/events";
@@ -67,6 +68,8 @@ interface BasePayload {
   recipientEmail: string;
   recipientFirstName: string;
   recipientLastName: string;
+  /** Optional. Sent as the contact's phone number when given. */
+  recipientPhone?: string | undefined;
 }
 
 interface EventPayload extends BasePayload {
@@ -90,6 +93,11 @@ function postEvent(
     last_name: "Last name",
     email: "Email",
   };
+  const phone = toInternationalPhone(payload.recipientPhone);
+  if (phone) {
+    formData["phone"] = phone;
+    formLabels["phone"] = "Phone";
+  }
 
   for (const [key, field] of Object.entries(customFields)) {
     if (field.value === undefined || field.value === null) continue;
@@ -220,6 +228,8 @@ export function sendSignupNotification(p: { newOrganiserEmail: string; newOrgani
       recipientLastName: rest.join(" "),
     },
     {
+      // The user type goes in the contact's Type field ({{contact.type}}) and nowhere else.
+      type: { value: "organiser", label: "Type" },
       [CF.organiserName]: { value: p.newOrganiserName, label: "New Organiser Name" },
       [CF.eventTitle]: { value: p.newOrganiserEmail, label: "New Organiser Email" },
     },
@@ -227,10 +237,11 @@ export function sendSignupNotification(p: { newOrganiserEmail: string; newOrgani
 }
 
 /**
- * A participant changed their "Klokk may contact me" choice. Ticked posts the participant-response
- * form; unticked (withdrawal) posts the opt-out form. Both carry the same readable fields so the
- * HighLevel automation can set mktg-consent=yes or mktg-consent=no and tell participants from
- * organisers by contact_role. People who never ticked the box are never sent here.
+ * A participant or organiser changed their "Klokk may contact me" choice. Ticked posts the
+ * participant-response form; unticked (withdrawal) posts the opt-out form, so the form itself
+ * says yes or no. The only extra value sent is the user type, which maps to the contact's Type
+ * field ({{contact.type}}) and to no other field. People who never ticked the box are never
+ * sent here.
  */
 export function sendKlokkMarketingChoice(
   p: BasePayload,
@@ -238,9 +249,7 @@ export function sendKlokkMarketingChoice(
   role: "participant" | "organiser" = "participant",
 ) {
   return postEvent(consent ? "klokk_marketing_optin" : "klokk_marketing_optout", p, {
-    mktg_consent: { value: consent ? "yes" : "no", label: "Marketing consent" },
     // Maps to the contact's Type field in HighLevel ({{contact.type}}).
     type: { value: role, label: "Type" },
-    consent_date: { value: new Date().toISOString(), label: "Consent date" },
   });
 }

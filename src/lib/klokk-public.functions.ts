@@ -279,7 +279,7 @@ export const submitResponse = createServerFn({ method: "POST" })
     const cap = participantCapForPlan(owner?.plan);
     const { data: existing } = await client
       .from("participant_responses")
-      .select("id, edit_token_hash, klokk_marketing_consent, organiser_marketing_consent")
+      .select("id, edit_token_hash, phone, klokk_marketing_consent, organiser_marketing_consent")
       .eq("event_id", event.id)
       .eq("email", email)
       .maybeSingle();
@@ -362,6 +362,7 @@ export const submitResponse = createServerFn({ method: "POST" })
             recipientEmail: email,
             recipientFirstName: data.firstName.trim(),
             recipientLastName: data.lastName.trim(),
+            recipientPhone: newPhone ?? (existing?.phone as string | undefined) ?? undefined,
           },
           data.klokkConsent,
         );
@@ -379,7 +380,7 @@ export const submitResponse = createServerFn({ method: "POST" })
             firstName: data.firstName.trim(),
             lastName: data.lastName.trim(),
             email,
-            phone: newPhone,
+            phone: newPhone ?? (existing?.phone as string | null | undefined) ?? null,
             eventTitle: event.title,
           },
         });
@@ -434,6 +435,7 @@ export const submitResponse = createServerFn({ method: "POST" })
           recipientEmail: email,
           recipientFirstName: data.firstName,
           recipientLastName: data.lastName,
+          recipientPhone: newPhone ?? undefined,
           event: fullEvent,
           organiserName,
           origin: await (await import("./klokk-origin.server")).appOrigin(),
@@ -524,7 +526,7 @@ export const reportEmbedInteraction = createServerFn({ method: "POST" })
  */
 async function getEmbedFrameConfig(
   rawToken: string,
-): Promise<{ frameAncestors: string; accent: string | null } | null> {
+): Promise<{ frameAncestors: string; accent: string | null; hideSignupPrompt: boolean } | null> {
   if (!rawToken.startsWith("emb.")) return null;
   const { eventToken } = await resolveToken(rawToken);
   const client = await admin();
@@ -536,12 +538,13 @@ async function getEmbedFrameConfig(
   if (!ev) return null;
   const { data: prof } = await client
     .from("profiles")
-    .select("embed_settings")
+    .select("embed_settings, plan")
     .eq("id", ev.owner_id)
     .maybeSingle();
   const settings = (prof?.embed_settings ?? {}) as {
     domainAllowlist?: string[];
     accentOverride?: string;
+    hideSignupPrompt?: boolean;
   };
   const hosts = frameAncestorHosts(settings.domainAllowlist ?? []).map((h) => `https://${h}`);
   const accent =
@@ -549,7 +552,12 @@ async function getEmbedFrameConfig(
       ? settings.accentOverride
       : null;
   // No allow-list means nobody may frame it: the organiser must opt in per domain.
-  return { frameAncestors: hosts.length > 0 ? hosts.join(" ") : "'none'", accent };
+  const paid = prof?.plan === "organiser" || prof?.plan === "teams";
+  return {
+    frameAncestors: hosts.length > 0 ? hosts.join(" ") : "'none'",
+    accent,
+    hideSignupPrompt: paid && settings.hideSignupPrompt === true,
+  };
 }
 
 export const getEmbedConfig = createServerFn({ method: "GET" })

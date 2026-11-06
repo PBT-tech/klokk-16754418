@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { plainError } from "@/lib/klokk-errors";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,14 +62,12 @@ function SignIn() {
           return;
         }
         setUnverifiedEmail(null);
-        toast.error(error.message);
+        toast.error(plainError(error, "Something went wrong. Please try again."));
         return;
       }
     } catch (err) {
       toast.error(
-        err instanceof Error
-          ? err.message
-          : "Network connection error. Please refresh the page and try again.",
+        plainError(err, "Network connection error. Please refresh the page and try again."),
       );
       return;
     }

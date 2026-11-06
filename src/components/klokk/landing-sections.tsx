@@ -8,7 +8,7 @@ export function HowItWorks() {
     {
       icon: CalendarCheck,
       title: "Set up your event",
-      body: "Drop in a title, pick the dates that might work, and set a deadline. Two minutes — three if you're being poetic about it.",
+      body: "Give it a name, pick the dates that might work, and choose a last day to reply. It takes two minutes.",
     },
     {
       icon: Link2,
@@ -18,7 +18,7 @@ export function HowItWorks() {
     {
       icon: Zap,
       title: "Confirm the best time",
-      body: "Watch responses land live. Klokk surfaces the slot with the most overlap — so you confirm without a spreadsheet or a prayer.",
+      body: "Watch replies arrive. Klokk shows the time that suits the most people, so you can book it without a spreadsheet.",
     },
   ];
   return (
@@ -59,8 +59,8 @@ export function Features() {
     },
     {
       icon: Clock,
-      title: "Live availability heat map",
-      body: "Every response shades the grid in real time. The best time surfaces itself — no tallying, no squinting at a Doodle that half the team forgot to open.",
+      title: "See when most people are free",
+      body: "Each reply colours in the grid as it arrives. The best time stands out, so there is no counting by hand.",
     },
     {
       icon: ShieldCheck,
@@ -69,8 +69,8 @@ export function Features() {
     },
     {
       icon: Mail,
-      title: "Branded notifications",
-      body: "Invitations, reminders, and confirmations — all in one elegant, mobile-optimised template with your event details front and centre. They actually get read.",
+      title: "Emails that look good",
+      body: "Invitations, reminders and confirmations all look good on a phone and put your event details first, so they get read.",
     },
   ];
   return (
@@ -124,10 +124,10 @@ export function ParticipantShowcase() {
             </p>
             <ul className="mt-6 space-y-3">
               {[
-                "Works beautifully on mobile",
-                "One-tap availability selection",
-                "Instant confirmation of submission",
-                "Final time sent straight to their inbox",
+                "Easy to use on a phone",
+                "Tap the times that suit",
+                "They see straight away that their reply was sent",
+                "The final time arrives in their email",
               ].map((t) => (
                 <li key={t} className="flex items-center gap-3 text-[14px]">
                   <span className="inline-flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary">

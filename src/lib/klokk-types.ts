@@ -116,6 +116,8 @@ export interface EmbedSettings {
   accentOverride: string;
   domainAllowlist: string[];
   embedExpiry: string;
+  /** Paid monthly plans only: hide the "create your own Klokk account" line under embeds. */
+  hideSignupPrompt?: boolean | undefined;
 }
 
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {

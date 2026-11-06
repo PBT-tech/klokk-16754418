@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { plainError } from "@/lib/klokk-errors";
 import { useEffect, useState } from "react";
 import { ArrowLeft, MailCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -56,7 +57,7 @@ function ResetPassword() {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setSaving(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(plainError(error, "Something went wrong. Please try again."));
       return;
     }
     toast.success("Password updated — you're signed in");
@@ -72,7 +73,7 @@ function ResetPassword() {
     if (redirect) opts.redirectTo = redirect;
     const { error } = await supabase.auth.resetPasswordForEmail(email, opts);
     if (error) {
-      toast.error(error.message);
+      toast.error(plainError(error, "Something went wrong. Please try again."));
       return;
     }
     setSent(true);

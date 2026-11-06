@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { plainError } from "@/lib/klokk-errors";
 import { Ban, Check, Code2, Copy, Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -126,14 +127,11 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
             accentOverride: account.embedSettings?.accentOverride || "#c9a84c",
             embedExpiry: account.embedSettings?.embedExpiry ?? "",
             domainAllowlist: [...allowed, domain],
+            hideSignupPrompt: account.embedSettings?.hideSignupPrompt === true,
           },
         });
       } catch (err) {
-        toast.error(
-          err instanceof Error && err.message
-            ? `Could not add that website to your allowed list: ${err.message}`
-            : "Could not add that website to your allowed list",
-        );
+        toast.error(plainError(err, "Could not add that website to your allowed list"));
         return;
       }
     }

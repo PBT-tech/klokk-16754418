@@ -1,11 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { plainError } from "@/lib/klokk-errors";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  useAddEventCredits,
   useDeleteSystemUser,
+  useRemoveEventCredits,
+  useSystemOverview,
   useSession,
   useSetUserPlan,
   useSystemAudit,
@@ -32,6 +36,9 @@ function OwnerPage() {
   const audit = useSystemAudit(isOwner);
   const setPlan = useSetUserPlan();
   const del = useDeleteSystemUser();
+  const overview = useSystemOverview(isOwner);
+  const addCredits = useAddEventCredits();
+  const removeCredits = useRemoveEventCredits();
   const [q, setQ] = useState("");
   const [planFilter, setPlanFilter] = useState<"all" | Plan>("all");
 
@@ -84,7 +91,8 @@ function OwnerPage() {
         System owner
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Users and plans across all of Klokk. Changes here are recorded in the audit log below.
+        Users and plans across all of Klokk. Credits are used by people on the Casual plan. Changes
+        here are recorded in the audit log below.
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -96,6 +104,13 @@ function OwnerPage() {
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Stat label="Klokk marketing OK" value={all.filter((u) => u.marketingConsent).length} />
         <Stat label="CRM connected" value={all.filter((u) => u.crmConnected).length} />
+        <Stat label="Events made" value={overview.data?.events ?? 0} />
+        <Stat label="Replies this month" value={overview.data?.responsesMonth ?? 0} />
+        <Stat label="Replies ever" value={overview.data?.responsesAll ?? 0} />
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <Stat label="Replies: Klokk may contact" value={overview.data?.klokkOk ?? 0} />
+        <Stat label="Replies: organiser may contact" value={overview.data?.organiserOk ?? 0} />
       </div>
 
       <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -132,7 +147,9 @@ function OwnerPage() {
                 <th className="px-3 py-2">User</th>
                 <th className="px-3 py-2">Plan</th>
                 <th className="px-3 py-2">Events</th>
+                <th className="px-3 py-2">Credits</th>
                 <th className="px-3 py-2">Joined</th>
+                <th className="px-3 py-2">Last seen</th>
                 <th className="px-3 py-2">Klokk mktg</th>
                 <th className="px-3 py-2">CRM</th>
                 <th className="px-3 py-2" />
@@ -159,8 +176,7 @@ function OwnerPage() {
                           { userId: u.id, plan: next },
                           {
                             onSuccess: () => toast.success("Plan updated"),
-                            onError: (err) =>
-                              toast.error(err instanceof Error ? err.message : "Could not update"),
+                            onError: (err) => toast.error(plainError(err, "Could not update")),
                           },
                         );
                       }}
@@ -175,8 +191,55 @@ function OwnerPage() {
                     </select>
                   </td>
                   <td className="px-3 py-2">{u.eventsTotal}</td>
+                  <td className="px-3 py-2">
+                    <span className="mr-2">{u.creditsLeft}</span>
+                    <button
+                      type="button"
+                      className="mr-2 text-sm text-primary underline-offset-4 hover:underline"
+                      disabled={addCredits.isPending}
+                      onClick={() => {
+                        const n = Number(
+                          window.prompt(`Add how many event credits for ${u.email}?`, "5"),
+                        );
+                        if (!Number.isInteger(n) || n < 1 || n > 100) return;
+                        addCredits.mutate(
+                          { userId: u.id, count: n },
+                          {
+                            onSuccess: () => toast.success("Credits added"),
+                            onError: (err) => toast.error(plainError(err, "Could not add")),
+                          },
+                        );
+                      }}
+                    >
+                      Add
+                    </button>
+                    {u.creditsLeft > 0 && (
+                      <button
+                        type="button"
+                        className="text-sm text-primary underline-offset-4 hover:underline"
+                        disabled={removeCredits.isPending}
+                        onClick={() => {
+                          if (
+                            !window.confirm(
+                              `Remove all ${u.creditsLeft} unused credits from ${u.email}?`,
+                            )
+                          )
+                            return;
+                          removeCredits.mutate(u.id, {
+                            onSuccess: () => toast.success("Credits removed"),
+                            onError: (err) => toast.error(plainError(err, "Could not remove")),
+                          });
+                        }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </td>
                   <td className="px-3 py-2 text-sm text-muted-foreground">
                     {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
+                  </td>
+                  <td className="px-3 py-2 text-sm text-muted-foreground">
+                    {u.lastSeen ? new Date(u.lastSeen).toLocaleDateString() : "—"}
                   </td>
                   <td className="px-3 py-2">{u.marketingConsent ? "Yes" : "No"}</td>
                   <td className="px-3 py-2">{u.crmConnected ? "Yes" : "No"}</td>
@@ -194,8 +257,7 @@ function OwnerPage() {
                             return;
                           del.mutate(u.id, {
                             onSuccess: () => toast.success("Account deleted"),
-                            onError: (err) =>
-                              toast.error(err instanceof Error ? err.message : "Could not delete"),
+                            onError: (err) => toast.error(plainError(err, "Could not delete")),
                           });
                         }}
                       >
@@ -207,7 +269,7 @@ function OwnerPage() {
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">
+                  <td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">
                     No users match.
                   </td>
                 </tr>
