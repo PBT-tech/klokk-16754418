@@ -26,7 +26,7 @@ import { SlotsStep } from "./create-event-slots";
 import { Avatar, AvatarUpload } from "@/components/klokk/avatar";
 import { cryptoId, makeToken } from "@/lib/klokk-store";
 import { uploadParticipantAvatar } from "@/lib/klokk-avatars";
-import { useCreateEvent } from "@/lib/klokk-hooks";
+import { useCreateEvent, useSetEventContactSettings } from "@/lib/klokk-hooks";
 import { toSlotLabel } from "@/lib/klokk-format";
 import { participantCapForPlan } from "@/lib/klokk-limits";
 import { EmbedPanel } from "@/components/klokk/embed-panel";
@@ -34,12 +34,23 @@ import { PlanLimitsGuide } from "@/components/klokk/plan-limits-guide";
 import { VerifyEmailNotice } from "@/components/klokk/verify-email-notice";
 import type { KlokkAccount, KlokkEvent, KlokkPlanTier, NamedParticipant } from "@/lib/klokk-types";
 
-export function CreateEventFlow({ account }: { account: KlokkAccount }) {
+export function CreateEventFlow({
+  account,
+  initial,
+  copyFrom,
+}: {
+  account: KlokkAccount;
+  /** Starting values when duplicating an event. */
+  initial?: Draft;
+  /** The event being duplicated, so its CRM and host name can carry over. */
+  copyFrom?: KlokkEvent;
+}) {
   const navigate = useNavigate();
   const createEvent = useCreateEvent();
   const [step, setStep] = useState(0);
   const [created, setCreated] = useState<KlokkEvent | null>(null);
-  const [draft, setDraft] = useState<Draft>(emptyDraft());
+  const [draft, setDraft] = useState<Draft>(initial ?? emptyDraft());
+  const setContact = useSetEventContactSettings();
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
@@ -94,6 +105,18 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
               }))
             : [],
       });
+      // A duplicate keeps the original's CRM and host name (Organiser and Teams only).
+      if (copyFrom && (copyFrom.crmConnectionId || copyFrom.hostName)) {
+        try {
+          await setContact.mutateAsync({
+            eventId: created.id,
+            connectionId: copyFrom.crmConnectionId ?? null,
+            hostName: copyFrom.hostName ?? null,
+          });
+        } catch {
+          toast.message("Event created. Check its contact settings, they did not copy over.");
+        }
+      }
       setCreated(created);
       toast.success("Event created");
     } catch (err) {
@@ -112,8 +135,14 @@ export function CreateEventFlow({ account }: { account: KlokkAccount }) {
       </Link>
 
       <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-chart-4">
-        Create an event
+        {copyFrom ? "Duplicate event" : "Create an event"}
       </h1>
+      {copyFrom && (
+        <p className="mt-2 text-sm text-muted-foreground">
+          This is a copy of "{copyFrom.title}". Check the dates, then change anything you like.
+          Replies are not copied, and the new event gets its own link.
+        </p>
+      )}
 
       {!account.emailVerified && <VerifyEmailNotice email={account.email} />}
 
