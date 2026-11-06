@@ -42,7 +42,7 @@ function EmbedCode({ token }: { token: string }) {
   return (
     <div className="mt-2 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <div role="tablist" aria-label="Embed code format" className="flex gap-1">
+        <div role="tablist" aria-label="Which kind of code" className="flex gap-1">
           {(["script", "iframe"] as const).map((f) => (
             <button
               key={f}
@@ -50,13 +50,13 @@ function EmbedCode({ token }: { token: string }) {
               role="tab"
               aria-selected={format === f}
               onClick={() => setFormat(f)}
-              className={`rounded-md border px-2.5 py-1 text-xs font-medium ${
+              className={`rounded-md border px-2.5 py-1 text-sm font-medium ${
                 format === f
                   ? "border-primary/60 bg-primary/10 text-primary"
                   : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
-              {f === "script" ? "Script (recommended)" : "iframe"}
+              {f === "script" ? "Easiest (recommended)" : "If that does not work"}
             </button>
           ))}
         </div>
@@ -73,14 +73,14 @@ function EmbedCode({ token }: { token: string }) {
         readOnly
         value={code}
         rows={4}
-        aria-label="Embed code"
+        aria-label="Code to paste"
         onFocus={(e) => e.currentTarget.select()}
-        className="w-full resize-none rounded-md border border-border bg-card p-2 font-mono text-[11px] text-card-foreground"
+        className="w-full resize-none rounded-md border border-border bg-card p-2 font-mono text-xs text-card-foreground"
       />
-      <p className="text-xs text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         {format === "script"
-          ? "Paste this where you want the event to appear on your page. The script sizes itself."
-          : "Use this if your website builder doesn't allow scripts. Paste it into an HTML or custom code block."}
+          ? "Paste this on your web page, where you want the event to show."
+          : "Use this if the easiest one does not work on your website. Paste it into an HTML or custom code box."}
       </p>
     </div>
   );
@@ -109,7 +109,7 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
   const make = async () => {
     const n = days.trim() ? Number(days) : undefined;
     if (n !== undefined && (!Number.isInteger(n) || n < 1 || n > 730)) {
-      toast.error("Expiry must be a whole number of days (1–730), or blank for no expiry");
+      toast.error("Enter a whole number of days from 1 to 730, or leave it empty to never stop");
       return;
     }
     const domain = normaliseAllowedDomain(site);
@@ -145,7 +145,7 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
           setOpen((prev) => new Set(prev).add(res.id));
           setSite("");
           setDays("");
-          toast.success("Embed code created. Copy it from below.");
+          toast.success("Your code is ready. Copy it from below.");
         },
         onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create embed"),
       },
@@ -154,14 +154,13 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
 
   return (
     <div className="rounded-xl border border-border bg-card p-3">
-      <p className="mb-3 text-xs text-muted-foreground">
-        Put this event on a website. Create an embed code for each website you want to use it on,
-        then copy the code and paste it into that site. You can revoke a link at any time without
-        touching the site.
+      <p className="mb-3 text-sm text-muted-foreground">
+        Show this event on your own website. Make a code for each website, copy it, and paste it
+        into that website. You can turn a code off at any time.
       </p>
 
       <div className="mb-3 space-y-2 rounded-lg border border-border p-2">
-        <label className="block text-xs font-medium text-card-foreground" htmlFor="embed-site">
+        <label className="block text-sm font-medium text-card-foreground" htmlFor="embed-site">
           Website this link is for
         </label>
         <input
@@ -169,9 +168,9 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
           value={site}
           onChange={(e) => setSite(e.target.value)}
           placeholder="www.yoursite.com"
-          className="h-9 w-full rounded-md border border-border bg-card px-3 text-xs"
+          className="h-9 w-full rounded-md border border-border bg-card px-3 text-sm"
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {noDomains
             ? "No websites are allowed yet, so embeds are blocked everywhere. Enter your website here and it will be allowed automatically."
             : "If this website isn't on your allowed list yet, it is added when you create the link. It stays allowed for all your embeds until you remove it in Settings."}{" "}
@@ -186,9 +185,9 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
             inputMode="numeric"
             value={days}
             onChange={(e) => setDays(e.target.value)}
-            placeholder="Expires in days (optional)"
-            aria-label="Days until the embed code expires"
-            className="h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-3 text-xs"
+            placeholder="Stop working after how many days? (optional)"
+            aria-label="Days until the code stops working"
+            className="h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-3 text-sm"
           />
           <Button
             size="sm"
@@ -196,14 +195,14 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
             disabled={create.isPending || updateSettings.isPending}
           >
             <Plus className="size-3.5" />
-            Create embed code
+            Make my website code
           </Button>
         </div>
       </div>
 
       {embeds.length === 0 && (
-        <p className="text-xs text-muted-foreground">
-          No embed codes yet. Click "Create embed code" above and the code to paste appears here.
+        <p className="text-sm text-muted-foreground">
+          No codes yet. Press "Make my website code" above and your code appears here.
         </p>
       )}
       <ul className="space-y-3">
@@ -213,18 +212,18 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
           const shown = open.has(e.id);
           return (
             <li key={e.id} className="rounded-lg border border-border p-2">
-              <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center justify-between text-sm">
                 <span className={dead ? "text-muted-foreground line-through" : "font-medium"}>
                   {e.revokedAt
-                    ? "Revoked"
+                    ? "Turned off"
                     : dead
-                      ? "Expired"
+                      ? "Stopped working"
                       : e.expiresAt
-                        ? `Active until ${new Date(e.expiresAt).toLocaleDateString()}`
-                        : "Active"}
+                        ? `Works until ${new Date(e.expiresAt).toLocaleDateString()}`
+                        : "Working"}
                 </span>
                 <span className="text-muted-foreground">
-                  {e.views} views · {e.interactions} interactions · {e.submissions} submissions
+                  {e.views} looked · {e.interactions} clicked · {e.submissions} replied
                 </span>
               </div>
               {!dead && (
@@ -232,7 +231,7 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={() => toggle(e.id)}>
                       {shown ? <Check className="size-3.5" /> : <Code2 className="size-3.5" />}
-                      {shown ? "Hide embed code" : "Show embed code"}
+                      {shown ? "Hide the code" : "Show the code"}
                     </Button>
                     <Button
                       variant="outline"
@@ -240,12 +239,12 @@ export function EmbedPanel({ event, account }: { event: KlokkEvent; account: Klo
                       onClick={() =>
                         revoke.mutate(
                           { id: e.id },
-                          { onSuccess: () => toast.message("Embed code revoked") },
+                          { onSuccess: () => toast.message("Code turned off") },
                         )
                       }
                     >
                       <Ban className="size-3.5" />
-                      Revoke
+                      Turn off
                     </Button>
                   </div>
                   {shown && <EmbedCode token={e.token} />}

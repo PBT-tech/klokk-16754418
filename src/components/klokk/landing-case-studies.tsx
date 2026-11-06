@@ -39,7 +39,7 @@ export function CaseStudies() {
               <div className="inline-flex size-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
                 <c.icon className="size-5" />
               </div>
-              <p className="mt-4 text-xs font-medium uppercase tracking-wide text-accent">
+              <p className="mt-4 text-sm font-medium uppercase tracking-wide text-accent">
                 {c.kicker}
               </p>
               <h3 className="mt-1 font-display text-lg font-semibold text-case-title">{c.title}</h3>

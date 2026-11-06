@@ -40,7 +40,7 @@ const ROWS: {
 export function PlanLimitsGuide({ currentPlan }: { currentPlan: KlokkPlanTier }) {
   return (
     <div className="rounded-xl border border-border bg-surface/40 p-4">
-      <p className="text-xs font-semibold text-card-foreground">
+      <p className="text-sm font-semibold text-card-foreground">
         How many participants can respond? It depends on your plan. All prices are in Australian
         dollars (AUD).
       </p>
@@ -50,12 +50,12 @@ export function PlanLimitsGuide({ currentPlan }: { currentPlan: KlokkPlanTier })
           return (
             <li
               key={r.id}
-              className={`rounded-lg border p-3 text-xs ${current ? "border-primary/60 bg-primary/5" : "border-border"}`}
+              className={`rounded-lg border p-3 text-sm ${current ? "border-primary/60 bg-primary/5" : "border-border"}`}
             >
               <div className="flex flex-wrap items-baseline justify-between gap-x-3">
                 <span className="font-semibold text-card-foreground">{r.name}</span>
                 {current && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                     Your plan
                   </span>
                 )}
@@ -66,7 +66,7 @@ export function PlanLimitsGuide({ currentPlan }: { currentPlan: KlokkPlanTier })
           );
         })}
       </ul>
-      <p className="mt-3 text-xs text-muted-foreground">
+      <p className="mt-3 text-sm text-muted-foreground">
         You can change plan any time in Settings → Plan &amp; billing.
       </p>
     </div>

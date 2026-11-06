@@ -147,10 +147,10 @@ export function ParticipantShowcase() {
           <div className="rounded-2xl border border-border bg-card p-6 shadow-premium sm:p-8">
             <div className="flex items-center justify-between border-b border-border/70 pb-4">
               <KlokkLogo showWordmark={false} />
-              <span className="text-xs text-muted-foreground">klokk.com</span>
+              <span className="text-sm text-muted-foreground">klokk.com</span>
             </div>
             <div className="mt-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-accent">
+              <p className="text-sm font-medium uppercase tracking-wide text-accent">
                 Q3 Strategy Sync
               </p>
               <h3 className="mt-1 font-display text-xl font-semibold text-foreground">

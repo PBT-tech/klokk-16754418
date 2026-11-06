@@ -244,7 +244,7 @@ function SignUp() {
               control={control}
               name="marketingConsent"
               render={({ field }) => (
-                <label className="flex cursor-pointer items-start gap-3 text-xs text-muted-foreground">
+                <label className="flex cursor-pointer items-start gap-3 text-sm text-muted-foreground">
                   <Checkbox
                     checked={field.value === true}
                     onCheckedChange={(v) => field.onChange(v === true)}
@@ -257,7 +257,7 @@ function SignUp() {
                 </label>
               )}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               The free plan includes 3 events. Free-plan events and their responses are deleted
               automatically 90 days after they are created.
             </p>
@@ -292,9 +292,9 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
+      <Label className="text-sm font-medium text-muted-foreground">{label}</Label>
       {children}
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }

@@ -61,7 +61,7 @@ export function EventContactPanel({
   return (
     <div className="space-y-4 rounded-xl border border-border bg-card p-5">
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-card-foreground" htmlFor="event-crm">
+        <label className="text-sm font-semibold text-card-foreground" htmlFor="event-crm">
           Send contacts who tick the box to
         </label>
         <select
@@ -79,7 +79,7 @@ export function EventContactPanel({
         </select>
       </div>
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-card-foreground" htmlFor="event-host">
+        <label className="text-sm font-semibold text-card-foreground" htmlFor="event-host">
           Host name (optional)
         </label>
         <Input
@@ -90,7 +90,7 @@ export function EventContactPanel({
           placeholder="For example Acme Partners"
           className="bg-background text-foreground"
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Shown in the tick box instead of "the organiser of this event". Use it when you run the
           event with or for someone else, and connect their CRM above.
         </p>

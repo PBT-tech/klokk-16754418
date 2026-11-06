@@ -94,7 +94,7 @@ export function SlotsStep({
 
   return (
     <div>
-      <div className="mb-6 rounded-xl border border-border bg-surface/40 p-4 text-xs text-card-foreground">
+      <div className="mb-6 rounded-xl border border-border bg-surface/40 p-4 text-sm text-card-foreground">
         <p className="text-sm font-semibold">How to add times</p>
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
           <li>Pick a date (or a range of dates) on the calendar.</li>
@@ -120,7 +120,7 @@ export function SlotsStep({
         <div>
           <div className="mb-3 flex items-center justify-between">
             <Label className="text-sm font-semibold text-card-foreground">Select date range</Label>
-            <div className="inline-flex rounded-lg border border-border bg-surface p-0.5 text-xs">
+            <div className="inline-flex rounded-lg border border-border bg-surface p-0.5 text-sm">
               <button
                 type="button"
                 onClick={() => setMode("range")}
@@ -165,7 +165,7 @@ export function SlotsStep({
                 />
                 <label
                   htmlFor="skip-weekends"
-                  className="cursor-pointer text-xs font-medium text-card-foreground select-none"
+                  className="cursor-pointer text-sm font-medium text-card-foreground select-none"
                 >
                   Exclude Saturdays and Sundays
                 </label>
@@ -185,7 +185,7 @@ export function SlotsStep({
             <TimePicker label="End time" value={end} onChange={setEnd} />
           </div>
           {start >= end && (
-            <p role="alert" className="mt-2 text-xs text-destructive">
+            <p role="alert" className="mt-2 text-sm text-destructive">
               The end time must be after the start time. Check AM and PM.
             </p>
           )}
@@ -213,7 +213,7 @@ export function SlotsStep({
               <button
                 type="button"
                 onClick={() => set("slots", [])}
-                className="text-xs text-muted-foreground hover:text-destructive"
+                className="text-sm text-muted-foreground hover:text-destructive"
               >
                 Clear all
               </button>
@@ -228,7 +228,7 @@ export function SlotsStep({
             <div className="max-h-[380px] space-y-3 overflow-y-auto pr-1">
               {byDate.map(([date, slots]) => (
                 <div key={date}>
-                  <p className="mb-1 text-xs font-semibold text-card-foreground">
+                  <p className="mb-1 text-sm font-semibold text-card-foreground">
                     {toSlotLabel(date, "00:00", "00:00").split(" · ")[0]}
                     {slots.length > 1 && (
                       <span className="ml-1.5 font-normal text-muted-foreground">

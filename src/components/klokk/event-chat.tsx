@@ -49,7 +49,7 @@ export function EventChat({
     <div className="flex h-full flex-col">
       {pinned.length > 0 && (
         <div className="border-b border-border/70 bg-accent/5 p-3">
-          <p className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-accent">
             <Pin className="size-3" /> Pinned
           </p>
           <div className="space-y-1.5">
@@ -89,8 +89,9 @@ export function EventChat({
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
-        <Button type="submit" size="icon" disabled={!text.trim() || addChat.isPending}>
+        <Button type="submit" disabled={!text.trim() || addChat.isPending}>
           <Send className="size-4" />
+          Send
         </Button>
       </form>
     </div>
@@ -113,7 +114,7 @@ function MessageRow({
       <div className="flex items-center gap-2">
         <span
           className={cn(
-            "inline-flex size-6 items-center justify-center rounded-full text-[10px] font-semibold",
+            "inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold",
             message.isOrganiser
               ? "bg-primary text-primary-foreground"
               : "bg-surface-muted text-muted-foreground",
@@ -121,20 +122,20 @@ function MessageRow({
         >
           {message.authorName.slice(0, 1).toUpperCase()}
         </span>
-        <span className="text-xs font-medium text-foreground">
+        <span className="text-sm font-medium text-foreground">
           {message.authorName}
           {message.isOrganiser && (
-            <span className="ml-1 rounded bg-primary/10 px-1 text-[9px] font-semibold text-primary">
+            <span className="ml-1 rounded bg-primary/10 px-1 text-xs font-semibold text-primary">
               Organiser
             </span>
           )}
         </span>
-        <span className="text-[10px] text-muted-foreground">{formatTime(message.createdAt)}</span>
+        <span className="text-xs text-muted-foreground">{formatTime(message.createdAt)}</span>
         {canPin && (
           <button
             type="button"
             onClick={() => togglePin.mutate({ eventId, messageId: message.id })}
-            className="ml-auto text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover:opacity-100"
+            className="ml-auto text-muted-foreground hover:text-accent"
             aria-label="Pin message"
           >
             <Pin className="size-3.5" />
@@ -159,7 +160,7 @@ function PinnedRow({
 }) {
   return (
     <div className="flex items-start gap-2 rounded-lg bg-card px-3 py-2">
-      <p className="flex-1 text-xs text-foreground">
+      <p className="flex-1 text-sm text-foreground">
         <span className="font-medium">{message.authorName}: </span>
         {message.text}
       </p>

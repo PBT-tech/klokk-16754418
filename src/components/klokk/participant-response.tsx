@@ -217,11 +217,11 @@ export function ParticipantResponseView({ token }: { token: string }) {
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
       <div className="mb-8 flex items-center justify-between">
         <KlokkLogo />
-        <span className="text-xs text-muted-foreground">klokk.com</span>
+        <span className="text-sm text-muted-foreground">klokk.com</span>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-premium sm:p-8">
-        <p className="text-xs font-medium uppercase tracking-wide text-accent">
+        <p className="text-sm font-medium uppercase tracking-wide text-accent">
           {event.participationMode === "named" ? "You're invited" : "Share your availability"}
         </p>
         <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-card-foreground">
@@ -233,7 +233,7 @@ export function ParticipantResponseView({ token }: { token: string }) {
         {event.location && (
           <p className="mt-2 text-sm text-card-foreground/80">📍 {event.location}</p>
         )}
-        <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <Clock className="size-3.5" />
             Respond by {formatDateTime(event.deadline)} ({relativeDeadline(event.deadline)})
@@ -279,7 +279,7 @@ export function ParticipantResponseView({ token }: { token: string }) {
                 className="bg-card text-card-foreground border-border placeholder:text-muted-foreground"
               />
               {prior && (
-                <p className="mt-1.5 text-xs text-muted-foreground">
+                <p className="mt-1.5 text-sm text-muted-foreground">
                   We found a prior submission from this email — your previous selection is loaded
                   for editing.
                 </p>
@@ -295,13 +295,13 @@ export function ParticipantResponseView({ token }: { token: string }) {
                 placeholder="e.g. 0412 345 678"
                 className="bg-card text-card-foreground border-border placeholder:text-muted-foreground"
               />
-              <p className="mt-1.5 text-xs text-muted-foreground">
+              <p className="mt-1.5 text-sm text-muted-foreground">
                 Optional. Shared with the organiser only. We don't send you SMS messages.
               </p>
             </Field>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-card-foreground">
+              <Label className="text-sm font-semibold text-card-foreground">
                 Profile photo (optional)
               </Label>
               <AvatarUpload
@@ -343,7 +343,7 @@ export function ParticipantResponseView({ token }: { token: string }) {
                         <span>
                           {toSlotLabel(s.date, s.startTime, s.endTime)}
                           {count > 0 && (
-                            <span className="ml-2 text-xs text-muted-foreground">
+                            <span className="ml-2 text-sm text-muted-foreground">
                               {count} other{count === 1 ? "" : "s"}
                             </span>
                           )}
@@ -365,7 +365,7 @@ export function ParticipantResponseView({ token }: { token: string }) {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="notes" className="text-xs font-semibold text-card-foreground">
+              <Label htmlFor="notes" className="text-sm font-semibold text-card-foreground">
                 Add notes or dietary requirements (optional)
               </Label>
               <textarea
@@ -376,16 +376,16 @@ export function ParticipantResponseView({ token }: { token: string }) {
                 placeholder="e.g. Can do Tuesday if by 3pm, vegetarian, or prefer online"
                 className="flex min-h-[80px] w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-card-foreground shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Organisers see any notes alongside your chosen dates and times.
               </p>
             </div>
 
             <fieldset className="space-y-3 rounded-xl border border-border bg-background p-4">
-              <legend className="px-1 text-xs font-semibold text-card-foreground">
+              <legend className="px-1 text-sm font-semibold text-card-foreground">
                 Stay in touch (optional)
               </legend>
-              <label className="flex cursor-pointer items-start gap-3 text-xs text-muted-foreground">
+              <label className="flex cursor-pointer items-start gap-3 text-sm text-muted-foreground">
                 <Checkbox
                   checked={klokkConsent}
                   onCheckedChange={(v) => setKlokkConsent(v === true)}
@@ -397,7 +397,7 @@ export function ParticipantResponseView({ token }: { token: string }) {
                 </span>
               </label>
               {event.organiserContactOption && (
-                <label className="flex cursor-pointer items-start gap-3 text-xs text-muted-foreground">
+                <label className="flex cursor-pointer items-start gap-3 text-sm text-muted-foreground">
                   <Checkbox
                     checked={organiserConsent}
                     onCheckedChange={(v) => setOrganiserConsent(v === true)}
@@ -410,13 +410,13 @@ export function ParticipantResponseView({ token }: { token: string }) {
                   </span>
                 </label>
               )}
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Leaving these unticked does not affect your response. You will still get the emails
                 about this meeting.
               </p>
             </fieldset>
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               By submitting, you agree your name and email will be used to coordinate this meeting
               and shared with the organiser. They are deleted automatically: up to 90 days after the
               event is created on free plans, or 12 months after it closes on paid plans. See our{" "}
@@ -439,7 +439,7 @@ export function ParticipantResponseView({ token }: { token: string }) {
         )}
       </div>
 
-      <p className="mt-6 text-center text-xs text-muted-foreground">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         No account needed. Your details are only shared with the event organiser.
       </p>
     </div>
@@ -449,7 +449,7 @@ export function ParticipantResponseView({ token }: { token: string }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-semibold text-card-foreground">{label}</Label>
+      <Label className="text-sm font-semibold text-card-foreground">{label}</Label>
       {children}
     </div>
   );

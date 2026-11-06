@@ -188,7 +188,7 @@ export function CreateEventFlow({
               className="shadow-premium"
             >
               <Check className="size-4" />
-              Generate link
+              Create my event
             </Button>
           )}
         </div>
@@ -203,7 +203,7 @@ function Stepper({ step }: { step: number }) {
       {CREATE_STEPS.map((label, i) => (
         <li key={label} className="flex items-center gap-2">
           <span
-            className={`inline-flex size-7 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+            className={`inline-flex size-7 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
               i <= step
                 ? "bg-primary text-primary-foreground"
                 : "bg-surface-muted text-muted-foreground"
@@ -250,23 +250,21 @@ function DetailsStep({
       </div>
       <div className="space-y-2">
         <Label htmlFor="desc" className="text-sm font-semibold text-card-foreground">
-          Meeting description / details (optional)
+          What is the meeting about? (optional)
         </Label>
         <Textarea
           id="desc"
           rows={3}
-          placeholder="What's this meeting about? Add agenda, expectations, or background details."
+          placeholder="For example: a lunch to meet the new members"
           value={draft.description}
           onChange={(e) => set("description", e.target.value)}
           className="bg-card text-card-foreground border-border placeholder:text-muted-foreground"
         />
-        <p className="text-xs text-muted-foreground">
-          Share background context, goals, or discussion topics so invitees know what to expect.
-        </p>
+        <p className="text-sm text-muted-foreground">People see this when they reply.</p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="controlloc" className="text-sm font-semibold text-card-foreground">
-          Meeting location or link (optional)
+          Where is it? (optional)
         </Label>
         <Input
           id="controlloc"
@@ -275,9 +273,7 @@ function DetailsStep({
           onChange={(e) => set("location", e.target.value)}
           className="bg-card text-card-foreground border-border placeholder:text-muted-foreground"
         />
-        <p className="text-xs text-muted-foreground">
-          Venue name, street address, or video call link (Zoom, Google Meet, Teams).
-        </p>
+        <p className="text-sm text-muted-foreground">A place, an address, or a video call link.</p>
       </div>
     </div>
   );
@@ -298,19 +294,21 @@ function ParticipantsStep({
   return (
     <div className="space-y-6">
       <div>
-        <Label className="mb-3 block text-card-foreground">Participation requirement</Label>
+        <Label className="mb-3 block text-card-foreground">
+          How will we know enough people have replied?
+        </Label>
         <div className="grid gap-3 sm:grid-cols-2">
           <ModeCard
             active={draft.participationMode === "minimum"}
             onClick={() => set("participationMode", "minimum")}
-            title="Minimum count"
-            body="Event is ready to confirm once at least N people respond."
+            title="A number of people"
+            body="Ready to book once this many people have replied."
           />
           <ModeCard
             active={draft.participationMode === "named"}
             onClick={() => set("participationMode", "named")}
-            title="Named list"
-            body="Track responses against a specific list of required participants."
+            title="Specific people"
+            body="You list the people, and we show who has replied."
           />
         </div>
       </div>
@@ -318,7 +316,7 @@ function ParticipantsStep({
       {draft.participationMode === "minimum" ? (
         <div className="space-y-1.5">
           <Label htmlFor="min" className="text-card-foreground">
-            Minimum participants
+            How many people need to reply?
           </Label>
           <Input
             id="min"
@@ -418,7 +416,7 @@ function NamedList({
                   <p className="text-sm font-medium text-card-foreground">
                     {p.firstName} {p.lastName}
                   </p>
-                  <p className="text-xs text-muted-foreground">{p.email}</p>
+                  <p className="text-sm text-muted-foreground">{p.email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -444,6 +442,7 @@ function NamedList({
                   aria-label="Remove"
                 >
                   <X className="size-4" />
+                  <span className="ml-1 text-sm">Remove</span>
                 </button>
               </div>
             </li>
@@ -499,7 +498,7 @@ function DeadlineStep({
     <div className="space-y-5">
       <div className="space-y-1.5">
         <Label htmlFor="deadline" className="text-card-foreground">
-          Response deadline
+          Last day to reply
         </Label>
         <Input
           id="deadline"
@@ -514,8 +513,8 @@ function DeadlineStep({
       <div className="flex items-start gap-3 rounded-xl border border-border bg-surface/50 p-4">
         <Clock className="mt-0.5 size-4 shrink-0 text-accent" />
         <p className="text-sm text-muted-foreground">
-          After this deadline, the event is marked expired. You can still confirm from collected
-          responses, or extend the deadline at any time.
+          After this day, replies close. You can still book a time using the replies you have, or
+          give people more days at any time.
         </p>
       </div>
     </div>
@@ -568,7 +567,7 @@ function ReviewStep({ draft }: { draft: Draft }) {
 function ReviewBlock({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-border bg-background p-4">
-      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="mb-2 text-sm font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
       {children}

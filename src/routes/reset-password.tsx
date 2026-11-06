@@ -97,7 +97,7 @@ function ResetPassword() {
             </p>
             <form className="mt-6 space-y-4" onSubmit={onSetPassword}>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">New password</Label>
+                <Label className="text-sm font-medium text-muted-foreground">New password</Label>
                 <Input
                   type="password"
                   autoComplete="new-password"
@@ -106,7 +106,7 @@ function ResetPassword() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">
+                <Label className="text-sm font-medium text-muted-foreground">
                   Confirm new password
                 </Label>
                 <Input
@@ -148,7 +148,7 @@ function ResetPassword() {
             </p>
             <form className="mt-6 space-y-4" onSubmit={onSubmit}>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Email</Label>
+                <Label className="text-sm font-medium text-muted-foreground">Email</Label>
                 <Input
                   type="email"
                   placeholder="you@studio.co"
