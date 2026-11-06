@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { CalendarPlus, CalendarX, CheckCircle2, Clock, Plus, Users } from "lucide-react";
+import { CalendarPlus, CalendarX, CheckCircle2, Clock, Copy, Plus, Users } from "lucide-react";
 import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,14 @@ import { LimitBanner } from "@/components/klokk/limit-banner";
 import { VerifyEmailNotice } from "@/components/klokk/verify-email-notice";
 import { eventsWarning, participantWarning } from "@/lib/klokk-warnings";
 import { computeStatus } from "@/lib/klokk-store";
-import { formatDateShort, relativeDeadline, daysUntil } from "@/lib/klokk-format";
+import { bestSlot, slotCount } from "@/components/klokk/heat-map";
+import {
+  formatDateShort,
+  relativeDeadline,
+  daysUntil,
+  toSlotLabel,
+  confirmedTimeLabel,
+} from "@/lib/klokk-format";
 import type { KlokkEvent } from "@/lib/klokk-types";
 
 export const Route = createFileRoute("/dashboard")({
@@ -55,7 +62,7 @@ function Dashboard() {
   const confirmed = computed.filter((c) => c.status === "confirmed");
   const closed = computed.filter((c) => c.status === "cancelled" || c.status === "closed");
 
-  const totalResponses = events.reduce((n, e) => n + e.responses.length, 0);
+  const activeResponses = active.reduce((n, c) => n + c.event.responses.length, 0);
 
   const eventsW = billing ? eventsWarning(billing) : null;
   const eventW = active
@@ -98,22 +105,14 @@ function Dashboard() {
       {!account.emailVerified && <VerifyEmailNotice email={account.email} />}
       {bannerWarning && <LimitBanner warning={bannerWarning} />}
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <StatCard icon={<Clock className="size-4" />} label="Active events" value={active.length} />
-        <StatCard
-          icon={<Users className="size-4" />}
-          label="Total responses"
-          value={totalResponses}
-        />
-        <StatCard
-          icon={<CheckCircle2 className="size-4" />}
-          label="Confirmed"
-          value={confirmed.length}
-        />
-      </div>
+      <p className="mt-6 text-sm text-muted-foreground">
+        {active.length === 0
+          ? "Nothing is waiting for replies right now."
+          : `${active.length} event${active.length === 1 ? " is" : "s are"} waiting for replies. ${activeResponses} ${activeResponses === 1 ? "person has" : "people have"} replied so far.`}
+      </p>
 
       <div className="mt-10">
-        <SectionTitle>Active</SectionTitle>
+        <SectionTitle>Waiting for replies</SectionTitle>
         {active.length === 0 ? (
           <EmptyState
             title="No active events"
@@ -154,20 +153,6 @@ function Dashboard() {
   );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
-  return (
-    <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-premium">
-      <div className="inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-        {icon}
-      </div>
-      <div>
-        <p className="font-display text-2xl font-bold text-card-foreground">{value}</p>
-        <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      </div>
-    </div>
-  );
-}
-
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.14em] text-foreground/80">
@@ -190,64 +175,103 @@ function EventCard({
     event.participationMode === "named"
       ? event.namedParticipants.length
       : (event.minimumCount ?? 0);
-  const dd = daysUntil(event.deadline);
   // Free-plan events are deleted 90 days after they are created; warn from day 76.
   const daysLeft = plan === "free" ? 90 + daysUntil(event.createdAt) : null;
   const nearDeletion = daysLeft !== null && daysLeft <= 14;
+  const best = responded > 0 ? bestSlot(event) : undefined;
+  const bestCount = best ? slotCount(event, best.id) : 0;
+  const waiting = status === "awaiting_responses" || status === "ready_to_confirm";
 
   return (
-    <Link
-      to="/events/$id"
-      params={{ id: event.id }}
-      className="group block rounded-2xl border border-border bg-card p-5 shadow-premium transition-all hover:border-primary/30 hover:shadow-glow"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate font-display text-lg font-semibold text-card-foreground">
-            {event.title}
-          </h3>
-          {event.location && (
-            <p className="mt-0.5 truncate text-sm text-muted-foreground">{event.location}</p>
-          )}
+    <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-premium transition-all hover:border-primary/30 hover:shadow-glow">
+      <Link to="/events/$id" params={{ id: event.id }} className="block">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="truncate font-display text-lg font-semibold text-card-foreground">
+              {event.title}
+            </h3>
+            {event.location && (
+              <p className="mt-0.5 truncate text-sm text-muted-foreground">{event.location}</p>
+            )}
+          </div>
+          <StatusBadge status={status} />
         </div>
-        <StatusBadge status={status} />
-      </div>
 
-      <div className="mt-4 flex items-center gap-4 text-sm">
-        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-          <Users className="size-3.5" />
-          {responded}
-          {target > 0 ? `/${target}` : ""} responded
-        </span>
-        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-          <Clock className="size-3.5" />
-          {status === "expired" ? "Expired" : relativeDeadline(event.deadline)}
-        </span>
-      </div>
-
-      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-surface-muted">
-        <div
-          className="h-full rounded-full bg-primary transition-all"
-          style={{
-            width: `${target > 0 ? Math.min(100, (responded / target) * 100) : 0}%`,
-          }}
-        />
-      </div>
-
-      {nearDeletion && (
-        <p className="mt-3 flex items-center gap-1.5 text-xs text-destructive">
-          <CalendarX className="size-3.5" />
-          Scheduled for deletion in {Math.max(0, daysLeft ?? 0)} day{daysLeft === 1 ? "" : "s"}
+        <p className="mt-4 text-card-foreground">
+          <span className="font-display text-3xl font-bold">{responded}</span>
+          <span className="ml-1.5 text-sm text-muted-foreground">
+            {target > 0 ? `of ${target} have replied` : responded === 1 ? "reply" : "replies"}
+          </span>
         </p>
-      )}
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: `${target > 0 ? Math.min(100, (responded / target) * 100) : 0}%` }}
+          />
+        </div>
 
-      <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-        <span>Created {formatDateShort(event.createdAt)}</span>
-        <span className="font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-          Manage →
+        <dl className="mt-4 space-y-1.5 text-sm">
+          {status === "confirmed" ? (
+            <div className="flex items-center gap-2 text-card-foreground">
+              <CheckCircle2 className="size-4 text-primary" />
+              <dd>Booked for {confirmedTimeLabel(event)}</dd>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <CheckCircle2 className="size-4" />
+                <dd>
+                  {best
+                    ? `Best time: ${toSlotLabel(best.date, best.startTime, best.endTime)} (${bestCount} ${bestCount === 1 ? "person" : "people"})`
+                    : "Best time: no replies yet"}
+                </dd>
+              </div>
+              {waiting || status === "expired" ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="size-4" />
+                  <dd>
+                    {status === "expired"
+                      ? "Replies closed. Open to book a time."
+                      : `Replies close ${relativeDeadline(event.deadline)}`}
+                  </dd>
+                </div>
+              ) : null}
+            </>
+          )}
+        </dl>
+
+        {nearDeletion && (
+          <p className="mt-3 flex items-center gap-1.5 text-xs text-destructive">
+            <CalendarX className="size-3.5" />
+            Scheduled for deletion in {Math.max(0, daysLeft ?? 0)} day{daysLeft === 1 ? "" : "s"}
+          </p>
+        )}
+      </Link>
+
+      <div className="mt-4 flex items-center justify-between gap-2 border-t border-border/70 pt-3">
+        <span className="text-xs text-muted-foreground">
+          Created {formatDateShort(event.createdAt)}
         </span>
+        <div className="flex gap-2">
+          <Link to="/events/new" search={{ from: event.id }}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-label={`Duplicate ${event.title}`}
+            >
+              <Copy className="size-3.5" />
+              Duplicate
+            </Button>
+          </Link>
+          <Link to="/events/$id" params={{ id: event.id }}>
+            <Button type="button" size="sm">
+              Open
+            </Button>
+          </Link>
+        </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

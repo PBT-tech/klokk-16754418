@@ -227,6 +227,12 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
             <Code2 className="size-4" />
             Embed code
           </Button>
+          <Link to="/events/new" search={{ from: event.id }}>
+            <Button variant="outline" size="sm">
+              <Copy className="size-4" />
+              Duplicate
+            </Button>
+          </Link>
           <Button variant="outline" size="sm" onClick={() => setShowChat((s) => !s)}>
             <MessageSquare className="size-4" />
             Chat

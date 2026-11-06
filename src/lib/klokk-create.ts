@@ -1,6 +1,6 @@
 // Pure helpers for the create-event flow. No React, no store — safe anywhere.
 
-import type { NamedParticipant, ParticipationMode, TimeSlot } from "./klokk-types";
+import type { KlokkEvent, NamedParticipant, ParticipationMode, TimeSlot } from "./klokk-types";
 import { toISODate } from "./klokk-format";
 
 export type Draft = {
@@ -58,3 +58,55 @@ export const CREATE_STEPS = [
   "Deadline",
   "Review",
 ] as const;
+
+const DAY_MS = 86_400_000;
+
+function shiftDate(iso: string, days: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const t = Date.UTC(y!, (m ?? 1) - 1, d ?? 1) + days * DAY_MS;
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+/**
+ * A starting point for "Duplicate this event". Everything is copied except the responses and
+ * the share links. If the old times are in the past they move forward by whole weeks, so a
+ * weekly meeting lands on the same weekday and time next week. The organiser can still change
+ * anything before the new event is created.
+ */
+export function draftFromEvent(source: KlokkEvent, now: Date = new Date()): Draft {
+  const base = emptyDraft();
+  const today = toISODate(now);
+  const tomorrow = shiftDate(today, 1);
+  const earliest = source.slots.map((s) => s.date).sort()[0];
+  let shift = 0;
+  if (earliest && earliest < tomorrow) {
+    const [ey, em, ed] = earliest.split("-").map(Number);
+    const [ty, tm, td] = tomorrow.split("-").map(Number);
+    const gap = Math.round(
+      (Date.UTC(ty!, (tm ?? 1) - 1, td ?? 1) - Date.UTC(ey!, (em ?? 1) - 1, ed ?? 1)) / DAY_MS,
+    );
+    shift = Math.ceil(gap / 7) * 7;
+  }
+  const slots = source.slots.map((s) => {
+    const date = shiftDate(s.date, shift);
+    return {
+      id: `slot_${date}_${s.startTime.replace(":", "")}_${s.endTime.replace(":", "")}`,
+      date,
+      startTime: s.startTime,
+      endTime: s.endTime,
+    };
+  });
+  return {
+    ...base,
+    title: `${source.title} (copy)`.slice(0, 200),
+    description: source.description ?? "",
+    location: source.location ?? "",
+    slots: sortSlots(slots),
+    participationMode: source.participationMode,
+    minimumCount: source.minimumCount ?? base.minimumCount,
+    namedParticipants: source.namedParticipants.map((p) => ({
+      ...p,
+      id: `np_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`,
+    })),
+  };
+}
