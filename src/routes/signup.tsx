@@ -136,7 +136,6 @@ function SignUp() {
       postTrackingEvent(trackingPayload, {
         customFields: {
           HW6sdINihzHa9KowrSTE: { value: "free", label: "Account Level" },
-          mktg_consent: { value: "yes", label: "Marketing consent" },
           type: { value: "organiser", label: "Type" },
         },
       });

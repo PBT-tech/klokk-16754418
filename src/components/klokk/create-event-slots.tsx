@@ -30,32 +30,30 @@ export function SlotsStep({
   const addSingleSlot = () => {
     const slot = makeSlot(singleDate, start, end);
     if (!slot) {
-      toast.error("Start time must be before end time");
+      toast.error("The start time must come before the end time. Check AM and PM.");
       return;
     }
     if (draft.slots.some((s) => s.id === slot.id)) {
-      toast.error("That slot already exists");
+      toast.error("You have already added that time.");
       return;
     }
     set("slots", sortSlots([...draft.slots, slot]));
-    toast.success(
-      `Added ${toSlotLabel(slot.date, slot.startTime, slot.endTime)}. Change the times and add again for another option on the same date.`,
-    );
+    toast.success(`Added ${toSlotLabel(slot.date, slot.startTime, slot.endTime)}.`);
   };
 
   const addRangeSlots = () => {
     if (!dateRange.from) {
-      toast.error("Please pick a start date");
+      toast.error("Please pick a day on the calendar first.");
       return;
     }
     if (start >= end) {
-      toast.error("Start time must be before end time");
+      toast.error("The start time must come before the end time. Check AM and PM.");
       return;
     }
     const from = new Date(dateRange.from);
     const to = dateRange.to ? new Date(dateRange.to) : new Date(dateRange.from);
     if (to < from) {
-      toast.error("End date must be on or after start date");
+      toast.error("The last day must not be before the first day.");
       return;
     }
 
@@ -80,13 +78,13 @@ export function SlotsStep({
     }
 
     if (count === 0) {
-      toast.info("All slots for this range and time are already added");
+      toast.info("Those times are already added.");
       return;
     }
 
     set("slots", sortSlots(newSlots));
     toast.success(
-      `Added ${count} option${count === 1 ? "" : "s"} (${format12(start)}–${format12(end)}). Change the times and add again to offer more times on the same dates.`,
+      `Added ${count} time${count === 1 ? "" : "s"} (${format12(start)}–${format12(end)}).`,
     );
   };
 
@@ -97,7 +95,10 @@ export function SlotsStep({
       <div className="mb-6 rounded-xl border border-border bg-surface/40 p-4 text-sm text-card-foreground">
         <p className="text-sm font-semibold">How to add times</p>
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
-          <li>Pick a date (or a range of dates) on the calendar.</li>
+          <li>
+            Pick a day on the calendar. To pick several days, press the first day, then the last
+            day.
+          </li>
           <li>
             Choose a <strong className="text-card-foreground">start</strong> and{" "}
             <strong className="text-card-foreground">end</strong> time. Use the AM / PM box to
@@ -119,7 +120,9 @@ export function SlotsStep({
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <Label className="text-sm font-semibold text-card-foreground">Select date range</Label>
+            <Label className="text-sm font-semibold text-card-foreground">
+              Pick the day or days
+            </Label>
             <div className="inline-flex rounded-lg border border-border bg-surface p-0.5 text-sm">
               <button
                 type="button"
@@ -130,7 +133,7 @@ export function SlotsStep({
                     : "text-muted-foreground hover:text-card-foreground"
                 }`}
               >
-                Start &amp; end range
+                Several days
               </button>
               <button
                 type="button"
@@ -141,7 +144,7 @@ export function SlotsStep({
                     : "text-muted-foreground hover:text-card-foreground"
                 }`}
               >
-                Single date
+                One day
               </button>
             </div>
           </div>
@@ -153,7 +156,7 @@ export function SlotsStep({
                 mode="range"
                 selected={dateRange as any}
                 onSelect={(range: any) => setDateRange(range ?? { from: undefined, to: undefined })}
-                className="rounded-xl border border-border p-3 bg-card"
+                className="rounded-xl border border-border p-3 bg-card [--cell-size:2.75rem]"
               />
               <div className="mt-2.5 flex items-center gap-2">
                 <input
@@ -167,7 +170,7 @@ export function SlotsStep({
                   htmlFor="skip-weekends"
                   className="cursor-pointer text-sm font-medium text-card-foreground select-none"
                 >
-                  Exclude Saturdays and Sundays
+                  Skip Saturdays and Sundays
                 </label>
               </div>
             </div>
@@ -176,7 +179,7 @@ export function SlotsStep({
               mode="single"
               selected={singleDate}
               onSelect={(d) => setSingleDate(d ?? undefined)}
-              className="rounded-xl border border-border p-3 bg-card"
+              className="rounded-xl border border-border p-3 bg-card [--cell-size:2.75rem]"
             />
           )}
 
@@ -191,12 +194,22 @@ export function SlotsStep({
           )}
 
           {mode === "range" ? (
-            <Button className="mt-4 w-full" onClick={addRangeSlots} variant="default">
+            <Button
+              className="mt-4 w-full"
+              onClick={addRangeSlots}
+              variant="default"
+              disabled={start >= end}
+            >
               <Plus className="size-4" />
-              Add {format12(start)}–{format12(end)} on every date in the range
+              Add {format12(start)}–{format12(end)} to every day picked
             </Button>
           ) : (
-            <Button className="mt-4 w-full" onClick={addSingleSlot} variant="default">
+            <Button
+              className="mt-4 w-full"
+              onClick={addSingleSlot}
+              variant="default"
+              disabled={start >= end}
+            >
               <Plus className="size-4" />
               Add{" "}
               {singleDate ? toSlotLabel(singleDate.toISOString().slice(0, 10), start, end) : "slot"}
@@ -207,13 +220,15 @@ export function SlotsStep({
         <div>
           <div className="mb-3 flex items-center justify-between">
             <Label className="text-sm font-semibold text-card-foreground">
-              Time options you are offering ({draft.slots.length})
+              Times you are offering ({draft.slots.length})
             </Label>
             {draft.slots.length > 0 && (
               <button
                 type="button"
-                onClick={() => set("slots", [])}
-                className="text-sm text-muted-foreground hover:text-destructive"
+                onClick={() => {
+                  if (window.confirm("Remove all the times you have added?")) set("slots", []);
+                }}
+                className="text-sm font-medium text-muted-foreground underline-offset-4 hover:text-destructive hover:underline"
               >
                 Clear all
               </button>
@@ -221,8 +236,8 @@ export function SlotsStep({
           </div>
           {draft.slots.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-surface/40 p-8 text-center text-sm text-muted-foreground">
-              Nothing added yet. Follow the steps above: pick a date, choose a start and end time,
-              then click Add.
+              Nothing added yet. Follow the steps above: pick a day, choose a start and end time,
+              then press the Add button.
             </div>
           ) : (
             <div className="max-h-[380px] space-y-3 overflow-y-auto pr-1">
@@ -253,10 +268,10 @@ export function SlotsStep({
                               draft.slots.filter((x) => x.id !== s.id),
                             )
                           }
-                          className="p-1 text-muted-foreground transition-colors hover:text-destructive"
+                          className="rounded-md px-2 py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
                           aria-label={`Remove ${toSlotLabel(s.date, s.startTime, s.endTime)}`}
                         >
-                          ✕
+                          Remove
                         </button>
                       </li>
                     ))}
