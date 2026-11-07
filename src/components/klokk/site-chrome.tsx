@@ -22,12 +22,12 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 bg-chart-4">
+      <div className="mx-auto flex h-9 max-w-6xl items-center justify-between px-3 sm:h-16 sm:px-6 bg-chart-4">
         <Link to="/" className="flex items-center" aria-label="Klokk home">
-          <KlokkLogo />
+          <KlokkLogo className="max-sm:gap-1.5 max-sm:[&>img]:size-[18px] max-sm:[&>span]:text-xs" />
         </Link>
 
-        <nav className="flex items-center gap-1 sm:gap-2">
+        <nav className="flex items-center gap-1 sm:gap-2 max-sm:[&_svg]:size-3">
           {isAuthed ? (
             <>
               <NavLink to="/dashboard" active={pathname.startsWith("/dashboard")}>
@@ -48,7 +48,7 @@ export function SiteHeader() {
                 type="button"
                 onClick={handleSignOut}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface hover:text-foreground",
+                  "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface hover:text-foreground max-sm:gap-1 max-sm:px-2 max-sm:py-1 max-sm:text-xs",
                 )}
               >
                 <LogOut className="size-4" />
@@ -62,14 +62,14 @@ export function SiteHeader() {
               </NavLink>
               <Link
                 to="/signup"
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-premium transition-all hover:opacity-95 active:scale-[0.98]"
+                className="inline-flex items-center gap-2 whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-premium max-sm:gap-1 max-sm:px-2 max-sm:py-1 max-sm:text-xs transition-all hover:opacity-95 active:scale-[0.98]"
               >
                 <Calendar className="size-4" />
                 Create a free event
               </Link>
             </>
           )}
-          <ThemeToggle />
+          <ThemeToggle className="max-sm:size-6" />
         </nav>
       </div>
     </header>
@@ -89,7 +89,7 @@ function NavLink({
     <Link
       to={to}
       className={cn(
-        "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors border-primary-foreground text-chart-4 hover:bg-surface hover:opacity-80 bg-accent-foreground text-card-foreground",
+        "inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors max-sm:gap-1 max-sm:px-2 max-sm:py-1 max-sm:text-xs border-primary-foreground text-chart-4 hover:bg-surface hover:opacity-80 bg-accent-foreground text-card-foreground",
         active ? "bg-surface text-chart-4" : "text-chart-4 hover:bg-surface hover:opacity-80",
       )}
     >

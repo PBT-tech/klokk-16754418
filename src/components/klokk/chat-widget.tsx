@@ -101,7 +101,7 @@ export function ChatWidget() {
         : null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 print:hidden">
+    <div className="fixed bottom-4 right-4 z-50 max-sm:bottom-3 max-sm:right-3 flex flex-col items-end gap-3 print:hidden">
       {open && (
         <div
           ref={panelRef}
@@ -165,9 +165,13 @@ export function ChatWidget() {
       <button
         onClick={() => handleOpen()}
         aria-label="Open chat"
-        className="relative inline-flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-premium transition-transform hover:scale-105"
+        className="relative inline-flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-premium transition-transform hover:scale-105 max-sm:size-7 max-sm:before:absolute max-sm:before:-inset-2 max-sm:before:content-['']"
       >
-        {open ? <X className="size-5" /> : <MessageCircle className="size-5" />}
+        {open ? (
+          <X className="size-5 max-sm:size-3.5" />
+        ) : (
+          <MessageCircle className="size-5 max-sm:size-3.5" />
+        )}
         {!open && state.unreadCount ? (
           <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
             {state.unreadCount}
