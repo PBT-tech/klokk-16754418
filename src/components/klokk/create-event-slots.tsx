@@ -106,7 +106,7 @@ export function SlotsStep({
           </li>
           <li>
             Click <strong className="text-card-foreground">Add</strong>. The option appears in the
-            list on the right.
+            list below.
           </li>
           <li>
             <strong className="text-card-foreground">
