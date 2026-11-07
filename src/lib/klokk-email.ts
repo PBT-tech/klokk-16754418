@@ -70,6 +70,8 @@ interface BasePayload {
   recipientLastName: string;
   /** Optional. Sent as the contact's phone number when given. */
   recipientPhone?: string | undefined;
+  /** Optional. Shown as the contact's Source in HighLevel (the event name). */
+  sourceName?: string | undefined;
 }
 
 interface EventPayload extends BasePayload {
@@ -125,7 +127,8 @@ function postEvent(
     sessionId: crypto.randomUUID(),
     properties: {
       deviceType: "desktop",
-      source: "ai_studio",
+      source:
+        (payload.sourceName ?? (payload as { event?: KlokkEvent }).event?.title)?.trim() || "Klokk",
       projectId: PROJECT_ID,
       formName: FORM_NAMES[type],
     },

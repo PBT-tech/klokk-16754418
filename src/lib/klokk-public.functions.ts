@@ -363,6 +363,7 @@ export const submitResponse = createServerFn({ method: "POST" })
             recipientFirstName: data.firstName.trim(),
             recipientLastName: data.lastName.trim(),
             recipientPhone: newPhone ?? (existing?.phone as string | undefined) ?? undefined,
+            sourceName: event.title,
           },
           data.klokkConsent,
         );
