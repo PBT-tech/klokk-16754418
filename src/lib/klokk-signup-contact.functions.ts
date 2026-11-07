@@ -21,6 +21,23 @@ export const createOrganiserContact = createServerFn({ method: "POST" })
     const locationId = process.env["HL_LOCATION_ID"];
     if (!token || !locationId) return { ok: false };
     try {
+      // This call is open to anyone, so it only ever CREATES a contact. If the email is already
+      // in HighLevel (or we cannot check), nothing is changed, so nobody can overwrite another
+      // person's tags or Account Level.
+      const lookup = await fetch(
+        `https://services.leadconnectorhq.com/contacts/search/duplicate?locationId=${encodeURIComponent(locationId)}&email=${encodeURIComponent(data.email)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Version: "2021-07-28",
+            Accept: "application/json",
+          },
+        },
+      );
+      if (!lookup.ok) return { ok: false };
+      const found = (await lookup.json().catch(() => null)) as { contact?: unknown } | null;
+      if (found?.contact) return { ok: true };
+
       const res = await fetch("https://services.leadconnectorhq.com/contacts/upsert", {
         method: "POST",
         headers: {
