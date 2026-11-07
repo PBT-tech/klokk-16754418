@@ -80,6 +80,40 @@ interface EventPayload extends BasePayload {
   origin: string;
 }
 
+/**
+ * Saves the phone number and the Source (the event name) on Klokk's own HighLevel contact by
+ * calling the API directly, because the form-tracking event does not reliably fill those two
+ * standard fields. Tags are deliberately not sent (the API would replace them all). Best-effort:
+ * with no token set, or on any error, nothing happens and the tracking event still goes out.
+ */
+async function saveOwnContactDetails(payload: BasePayload, source: string): Promise<void> {
+  const token = typeof process !== "undefined" ? process.env?.["HL_API_TOKEN"] : undefined;
+  const locationId = typeof process !== "undefined" ? process.env?.["HL_LOCATION_ID"] : undefined;
+  if (!token || !locationId) return;
+  const phone = toInternationalPhone(payload.recipientPhone);
+  try {
+    await fetch("https://services.leadconnectorhq.com/contacts/upsert", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Version: "2021-07-28",
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        locationId,
+        firstName: payload.recipientFirstName,
+        lastName: payload.recipientLastName,
+        email: payload.recipientEmail,
+        source,
+        ...(phone ? { phone } : {}),
+      }),
+    });
+  } catch {
+    /* best-effort */
+  }
+}
+
 function postEvent(
   type: NotificationType,
   payload: BasePayload,
@@ -107,6 +141,9 @@ function postEvent(
     formLabels[key] = field.label;
   }
 
+  const sourceLabel =
+    (payload.sourceName ?? (payload as { event?: KlokkEvent }).event?.title)?.trim() || "Klokk";
+
   const pageUrl =
     typeof window !== "undefined" ? window.location.href : "https://klokk.vibepreview.app";
 
@@ -127,8 +164,7 @@ function postEvent(
     sessionId: crypto.randomUUID(),
     properties: {
       deviceType: "desktop",
-      source:
-        (payload.sourceName ?? (payload as { event?: KlokkEvent }).event?.title)?.trim() || "Klokk",
+      source: sourceLabel,
       projectId: PROJECT_ID,
       formName: FORM_NAMES[type],
     },
@@ -139,13 +175,15 @@ function postEvent(
 
   // Returned (not fire-and-forget) so serverless callers can await it before the
   // function ends; otherwise the platform may drop the request.
-  return fetch(ENDPOINT, {
-    method: "POST",
-    headers: { version: "2021-07-28" },
-    body,
-  })
-    .then((res) => res.ok)
-    .catch(() => false);
+  return saveOwnContactDetails(payload, sourceLabel).then(() =>
+    fetch(ENDPOINT, {
+      method: "POST",
+      headers: { version: "2021-07-28" },
+      body,
+    })
+      .then((res) => res.ok)
+      .catch(() => false),
+  );
 }
 
 function eventLink(origin: string, token: string) {

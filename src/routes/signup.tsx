@@ -14,8 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { KlokkFullLogo } from "@/components/klokk/logo";
 import { PasswordStrength } from "@/components/klokk/password-strength";
 import { supabase } from "@/integrations/supabase/client";
-import { sendSignupNotification } from "@/lib/klokk-email";
-import { buildTrackingPayload, postTrackingEvent } from "@/lib/klokk-tracking";
+import { useServerFn } from "@tanstack/react-start";
+import { createOrganiserContact } from "@/lib/klokk-signup-contact.functions";
 import { useSession } from "@/lib/klokk-hooks";
 import { ResendVerificationButton } from "@/components/klokk/verify-email-notice";
 
@@ -49,6 +49,7 @@ function SignUp() {
   const navigate = useNavigate();
   const session = useSession();
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const createContact = useServerFn(createOrganiserContact);
 
   if (session) {
     navigate({ to: "/events/new" });
@@ -116,38 +117,17 @@ function SignUp() {
       }
     }
 
-    // Add the organiser to Klokk's CRM only if they ticked the box. Fire-and-forget.
+    // Create the organiser's contact directly in the sub-account (no form
+    // submission), stamping the Account Level custom field and the
+    // marketing-consent tag. Fire-and-forget — never blocks account creation.
     try {
-      if (!values.marketingConsent) throw new Error("no consent");
-      const trackingPayload = buildTrackingPayload(
-        "klokk-signup",
-        "Klokk Sign-up",
-        {
-          first_name: values.firstName,
-          last_name: values.lastName,
+      await createContact({
+        data: {
+          firstName: values.firstName,
+          lastName: values.lastName,
           email: values.email,
+          marketingConsent: values.marketingConsent,
         },
-        {
-          first_name: "First name",
-          last_name: "Last name",
-          email: "Email",
-        },
-      );
-      postTrackingEvent(trackingPayload, {
-        customFields: {
-          HW6sdINihzHa9KowrSTE: { value: "free", label: "Account Level" },
-          type: { value: "organiser", label: "Type" },
-        },
-      });
-    } catch {
-      /* best-effort */
-    }
-
-    // Notify the sub-account owner that a new organiser signed up.
-    try {
-      sendSignupNotification({
-        newOrganiserEmail: values.email,
-        newOrganiserName: `${values.firstName} ${values.lastName}`,
       });
     } catch {
       /* best-effort */
