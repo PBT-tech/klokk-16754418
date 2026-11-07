@@ -36,7 +36,7 @@ export function AvailabilityHeatMap({
   if (event.slots.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-surface/40 p-8 text-center text-sm text-muted-foreground">
-        No time slots defined for this event.
+        No times have been added to this event yet.
       </div>
     );
   }
@@ -54,6 +54,7 @@ export function AvailabilityHeatMap({
             key={s.id}
             type="button"
             onClick={() => onSelect?.(s.id)}
+            aria-pressed={isSelected}
             className={cn(
               "group relative overflow-hidden rounded-xl border p-4 text-left transition-all",
               isSelected
@@ -65,25 +66,27 @@ export function AvailabilityHeatMap({
           >
             <div
               aria-hidden
-              className="absolute inset-0 bg-primary/5 transition-opacity"
+              className="absolute inset-0 bg-primary/10 transition-opacity"
               style={{ opacity: pct * 0.9 }}
             />
             <div className="relative flex items-start justify-between gap-2">
               <div>
-                <p className="text-sm font-medium text-foreground">
+                <p className="text-base font-semibold text-foreground">
                   {toSlotLabel(s.date, s.startTime, s.endTime)}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {count} of {event.responses.length || "—"} available
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {event.responses.length === 0
+                    ? "No replies yet"
+                    : `${count} of ${event.responses.length} can come`}
                 </p>
               </div>
               {isBest && (
-                <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-accent-foreground">
-                  Best
+                <span className="rounded-full bg-accent px-2 py-0.5 text-sm font-semibold text-accent-foreground">
+                  Best time
                 </span>
               )}
             </div>
-            <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-surface-muted">
+            <div className="relative mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">
               <div
                 className="h-full rounded-full bg-primary transition-all"
                 style={{ width: `${Math.round(share * 100)}%` }}

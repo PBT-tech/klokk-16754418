@@ -4,7 +4,7 @@ const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
 const MINUTES = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"];
 
 const selectClass =
-  "h-9 rounded-md border border-border bg-card px-2 text-sm text-card-foreground focus-visible:outline-2 focus-visible:outline-ring";
+  "h-11 rounded-md border border-border bg-card px-3 text-base text-card-foreground focus-visible:outline-2 focus-visible:outline-ring";
 
 /** Split "HH:MM" (24-hour) into 12-hour parts. */
 function parts(value: string): { hour: number; minute: string; pm: boolean } {
@@ -37,7 +37,7 @@ export function TimePicker({
   const minutes = MINUTES.includes(minute) ? MINUTES : [...MINUTES, minute].sort();
   return (
     <fieldset className="space-y-1.5">
-      <legend className="text-xs font-semibold text-card-foreground">{label}</legend>
+      <legend className="text-sm font-semibold text-card-foreground">{label}</legend>
       <div className="flex items-center gap-1.5">
         <select
           aria-label={`${label} hour`}
