@@ -81,7 +81,7 @@ export function AvailabilityHeatMap({
                 </p>
               </div>
               {isBest && (
-                <span className="rounded-full bg-accent px-2 py-0.5 text-sm font-semibold text-accent-foreground">
+                <span className="shrink-0 whitespace-nowrap rounded-full bg-accent px-2 py-0.5 text-sm font-semibold text-accent-foreground">
                   Best time
                 </span>
               )}
