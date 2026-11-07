@@ -72,6 +72,8 @@ interface BasePayload {
   recipientPhone?: string | undefined;
   /** Optional. Shown as the contact's Source in HighLevel (the event name). */
   sourceName?: string | undefined;
+  /** Optional. The organiser's name, added to the Source after the event name. */
+  organiserName?: string | undefined;
 }
 
 interface EventPayload extends BasePayload {
@@ -80,26 +82,38 @@ interface EventPayload extends BasePayload {
   origin: string;
 }
 
+const HL_API = "https://services.leadconnectorhq.com";
+
+function hlHeaders(token: string) {
+  return {
+    Authorization: `Bearer ${token}`,
+    Version: "2021-07-28",
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  };
+}
+
 /**
- * Saves the phone number and the Source (the event name) on Klokk's own HighLevel contact by
- * calling the API directly, because the form-tracking event does not reliably fill those two
- * standard fields. Tags are deliberately not sent (the API would replace them all). Best-effort:
- * with no token set, or on any error, nothing happens and the tracking event still goes out.
+ * Saves the person on Klokk's own HighLevel contact by calling the API directly: name, email,
+ * phone (international format) and Source (event name and organiser). The form-tracking event
+ * does not reliably fill those standard fields, and every form event adds a "form" entry to the
+ * contact record. Tags are added and removed one by one, because sending a tag list on the
+ * upsert would replace all of them. Returns true when the contact was saved. With no token set,
+ * or on any error, it returns false and nothing is changed.
  */
-async function saveOwnContactDetails(payload: BasePayload, source: string): Promise<void> {
+async function saveOwnContact(
+  payload: BasePayload,
+  source: string,
+  tags?: { add: string[]; remove: string[] },
+): Promise<boolean> {
   const token = typeof process !== "undefined" ? process.env?.["HL_API_TOKEN"] : undefined;
   const locationId = typeof process !== "undefined" ? process.env?.["HL_LOCATION_ID"] : undefined;
-  if (!token || !locationId) return;
+  if (!token || !locationId) return false;
   const phone = toInternationalPhone(payload.recipientPhone);
   try {
-    await fetch("https://services.leadconnectorhq.com/contacts/upsert", {
+    const res = await fetch(`${HL_API}/contacts/upsert`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Version: "2021-07-28",
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
+      headers: hlHeaders(token),
       body: JSON.stringify({
         locationId,
         firstName: payload.recipientFirstName,
@@ -109,8 +123,26 @@ async function saveOwnContactDetails(payload: BasePayload, source: string): Prom
         ...(phone ? { phone } : {}),
       }),
     });
+    if (!res.ok) return false;
+    if (!tags) return true;
+    const json = (await res.json().catch(() => null)) as { contact?: { id?: string } } | null;
+    const id = json?.contact?.id;
+    if (!id) return false;
+    if (tags.remove.length > 0) {
+      await fetch(`${HL_API}/contacts/${id}/tags`, {
+        method: "DELETE",
+        headers: hlHeaders(token),
+        body: JSON.stringify({ tags: tags.remove }),
+      });
+    }
+    const added = await fetch(`${HL_API}/contacts/${id}/tags`, {
+      method: "POST",
+      headers: hlHeaders(token),
+      body: JSON.stringify({ tags: tags.add }),
+    });
+    return added.ok;
   } catch {
-    /* best-effort */
+    return false;
   }
 }
 
@@ -141,8 +173,17 @@ function postEvent(
     formLabels[key] = field.label;
   }
 
-  const sourceLabel =
-    (payload.sourceName ?? (payload as { event?: KlokkEvent }).event?.title)?.trim() || "Klokk";
+  const eventName = (
+    payload.sourceName ??
+    (payload as { event?: KlokkEvent }).event?.title ??
+    ""
+  ).trim();
+  const organiser = payload.organiserName?.trim();
+  const sourceLabel = eventName
+    ? organiser
+      ? `${eventName} (organiser: ${organiser})`
+      : eventName
+    : "Klokk";
 
   const pageUrl =
     typeof window !== "undefined" ? window.location.href : "https://klokk.vibepreview.app";
@@ -175,7 +216,7 @@ function postEvent(
 
   // Returned (not fire-and-forget) so serverless callers can await it before the
   // function ends; otherwise the platform may drop the request.
-  return saveOwnContactDetails(payload, sourceLabel).then(() =>
+  return saveOwnContact(payload, sourceLabel).then(() =>
     fetch(ENDPOINT, {
       method: "POST",
       headers: { version: "2021-07-28" },
@@ -284,11 +325,26 @@ export function sendSignupNotification(p: { newOrganiserEmail: string; newOrgani
  * field ({{contact.type}}) and to no other field. People who never ticked the box are never
  * sent here.
  */
-export function sendKlokkMarketingChoice(
+export async function sendKlokkMarketingChoice(
   p: BasePayload,
   consent: boolean,
   role: "participant" | "organiser" = "participant",
-) {
+): Promise<boolean> {
+  // Preferred route: straight to the HighLevel API. No form entry is added to the contact, and
+  // the tags show the choice: mktg-consent=yes or mktg-consent=no, plus the user type tag.
+  const eventName = p.sourceName?.trim();
+  const organiser = p.organiserName?.trim();
+  const source = eventName
+    ? organiser
+      ? `${eventName} (organiser: ${organiser})`
+      : eventName
+    : "Klokk";
+  const saved = await saveOwnContact(p, source, {
+    add: consent ? ["klokk", role, "mktg-consent=yes"] : ["mktg-consent=no"],
+    remove: [consent ? "mktg-consent=no" : "mktg-consent=yes"],
+  });
+  if (saved) return true;
+  // No API token set (or the call failed): fall back to the form event.
   return postEvent(consent ? "klokk_marketing_optin" : "klokk_marketing_optout", p, {
     // Maps to the contact's Type field in HighLevel ({{contact.type}}).
     type: { value: role, label: "Type" },

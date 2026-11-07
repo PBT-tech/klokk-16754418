@@ -350,6 +350,11 @@ export const submitResponse = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw error;
 
+    const ownerName =
+      owner && (owner.first_name || owner.last_name)
+        ? `${owner.first_name ?? ""} ${owner.last_name ?? ""}`.trim()
+        : undefined;
+
     // Consent-gated CRM delivery. People who never ticked a box are never sent anywhere.
     // A change in either direction is sent: ticking adds mktg-consent=yes, unticking
     // (withdrawal) sends the opt-out so the tag becomes mktg-consent=no. An edit that leaves
@@ -364,6 +369,7 @@ export const submitResponse = createServerFn({ method: "POST" })
             recipientLastName: data.lastName.trim(),
             recipientPhone: newPhone ?? (existing?.phone as string | undefined) ?? undefined,
             sourceName: event.title,
+            organiserName: ownerName,
           },
           data.klokkConsent,
         );
