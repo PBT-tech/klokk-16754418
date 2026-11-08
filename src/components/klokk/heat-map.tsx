@@ -21,7 +21,9 @@ export function AvailabilityHeatMap({
   event,
   selectedSlotId,
   onSelect,
+  wide,
 }: {
+  wide?: boolean | undefined;
   event: KlokkEvent;
   selectedSlotId?: string | undefined;
   onSelect?: ((slotId: string) => void) | undefined;
@@ -42,7 +44,7 @@ export function AvailabilityHeatMap({
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className={`grid gap-3 sm:grid-cols-2 ${wide ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
       {event.slots.map((s) => {
         const count = slotCount(event, s.id);
         const pct = count / max;

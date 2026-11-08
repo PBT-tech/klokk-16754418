@@ -60,6 +60,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
   const status = computeStatus(event);
   const link = `${typeof window !== "undefined" ? window.location.origin : ""}/event/${event.token}`;
   const best = bestSlot(event);
+  const manySlots = event.slots.length > 12;
   const warning = participantWarning(account.plan, event.responses.length, event.title);
 
   const respondedEmails = useMemo(
@@ -285,8 +286,14 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
 
       {warning && <LimitBanner warning={warning} />}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-        <section>
+      <div
+        className={
+          manySlots
+            ? "mt-8 grid gap-6 lg:grid-cols-3 lg:gap-4"
+            : "mt-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]"
+        }
+      >
+        <section className={manySlots ? "lg:col-span-2" : undefined}>
           <SectionTitle>Availability</SectionTitle>
           {status === "confirmed" ? (
             <ConfirmedView event={event} />
@@ -296,6 +303,7 @@ export function EventManagement({ event, account }: { event: KlokkEvent; account
                 Tap a time to pick it for the meeting. Darker colour means more people can come.
               </p>
               <AvailabilityHeatMap
+                wide={manySlots}
                 event={event}
                 selectedSlotId={confirmSlotId}
                 onSelect={setConfirmSlotId}
